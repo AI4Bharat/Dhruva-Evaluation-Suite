@@ -13,14 +13,25 @@ class BaseDatasetConfig():
 class IndicSUPERBTestKnownConfig(BaseDatasetConfig):
     EXTRACT_PATH: Path = Path("../datasets/raw/IndicSUPERB/test_known/")
     INPUT_TRANSCRIPT_FILE: Path = Path("../datasets/raw/IndicSUPERB/transcripts/hindi/test_known/transcription_n2w.txt")
-    INPUT_AUDIO_FILES: Path = Path("../datasets/raw/IndicSUPERB/audio/hindi/test_known/audio/")
-    INPUTWAV_AUDIO_FILES: Path = Path("../datasets/raw/IndicSUPERB/audio/hindi/test_known/audio_wav/")
+    INPUT_AUDIO_FILES: Path = Path("../datasets/raw/IndicSUPERB/known_audio/hindi/test_known/audio/")
+    INPUTWAV_AUDIO_FILES: Path = Path("../datasets/raw/IndicSUPERB/known_audio/hindi/test_known/audio_wav/")
     PREPROCESSED_FILE: Path = Path("../datasets/preprocessed/IndicSUPERB/Hindi/test_known/preprocessed.jsonl")
     LANG_CODE: str = "hi"
     BATCH_SIZE: int = 100
     def __post_init__(self):
         Path(os.path.dirname(self.EXTRACT_PATH)).mkdir(parents=True, exist_ok=True)
 
+@dataclass
+class IndicSUPERBTestUnknownConfig(BaseDatasetConfig):
+    EXTRACT_PATH: Path = Path("../datasets/raw/IndicSUPERB/test_unknown/")
+    INPUT_TRANSCRIPT_FILE: Path = Path("../datasets/raw/IndicSUPERB/transcripts/hindi/test/transcription_n2w.txt")
+    INPUT_AUDIO_FILES: Path = Path("../datasets/raw/IndicSUPERB/unknown_audio/hindi/test/audio/")
+    INPUTWAV_AUDIO_FILES: Path = Path("../datasets/raw/IndicSUPERB/unknown_audio/hindi/test/audio_wav/")
+    PREPROCESSED_FILE: Path = Path("../datasets/preprocessed/IndicSUPERB/Hindi/test_unknown/preprocessed.jsonl")
+    LANG_CODE: str = "hi"
+    BATCH_SIZE: int = 100
+    def __post_init__(self):
+        Path(os.path.dirname(self.EXTRACT_PATH)).mkdir(parents=True, exist_ok=True)
 
 @dataclass
 class MUCSHindiConfig(BaseDatasetConfig):
