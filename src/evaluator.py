@@ -118,6 +118,7 @@ if __name__ == "__main__":
                 # "ASRPreProcessor",
                 "MUCSPreProcessor",
                 "IndicSUPERBKnownPreProcessor",
+                "IndicSUPERBUnknownPreProcessor",
                 #"ASRBatchE2EModel",
                 #"ASRBatchE2EScorer",
                 #"WERMetric"
