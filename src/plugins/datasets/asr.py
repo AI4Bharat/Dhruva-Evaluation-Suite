@@ -56,6 +56,6 @@ class DatasetBase(PluginBase):
 def dataset_factory(class_name, config):
     return type(class_name, (DatasetBase,), {"config": config})
 
-
-IndicSUPERBDataset = dataset_factory("IndicSUPERBDataset", IndicSUPERBTestKnownConfig())
+IndicSUPERBKnownDataset = dataset_factory("IndicSUPERBKnownDataset", IndicSUPERBTestKnownConfig())
+IndicSUPERBUnknownDataset = dataset_factory("IndicSUPERBUnknownDataset", IndicSUPERBTestUnknownConfig())
 MUCSHindiDataset = dataset_factory("MUCSHindiDataset", MUCSHindiConfig())
