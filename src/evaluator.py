@@ -111,13 +111,14 @@ if __name__ == "__main__":
     eval = AccuracyEvaluator(
         {
             "plugins": [
-                # "IndicSUPERBDataset",
+                "IndicSUPERBKnownDataset",
                 "MUCSHindiDataset",
                 # "ASRPreProcessor",
                 "MUCSPreProcessor",
-                "ASRBatchE2EModel",
-                "ASRBatchE2EScorer",
-                "WERMetric"
+                "IndicSUPERBKnownPreProcessor",
+                #"ASRBatchE2EModel",
+                #"ASRBatchE2EScorer",
+                #"WERMetric"
             ]
         }
     )
