@@ -33,7 +33,15 @@ class IndicSUPERBTestUnknownConfig(BaseDatasetConfig):
     def __post_init__(self):
         Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
 
+@dataclass
+class IndicSUPERBTestTranscriptsConfig(BaseDatasetConfig):
+    DATASET_URL: str = "https://indic-asr-public.objectstore.e2enetworks.net/indic-superb/kathbath/clean/transcripts_n2w.tar"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "IndicSUPERB - Test Transcripts"
+    LOCAL_PATH: Path = Path("../datasets/raw/IndicSUPERB/transcripts.tar")
 
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
 
 @dataclass
 class MUCSHindiConfig(BaseDatasetConfig):

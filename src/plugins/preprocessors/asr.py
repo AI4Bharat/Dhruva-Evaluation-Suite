@@ -135,9 +135,9 @@ class IndicSUPERBKnownPreProcessor(ASRPreProcessor):
             pass
         else:
         # Convert each .m4a file to .wav format and delete the original
-            for m4a_file in m4a_files:
+            for m4a_file in tqdm(m4a_files):
                 wav_file = m4a_file[:-4] + '.wav'
-                subprocess.run(['ffmpeg', '-hide_banner', '-i', os.path.join(directory,m4a_file), os.path.join(wav_directory,wav_file)])
+                subprocess.run(['ffmpeg', '-hide_banner', '-i', os.path.join(directory,m4a_file),'-ar', '16k', '-ac', '1', '-hide_banner', '-loglevel', 'error', os.path.join(wav_directory,wav_file)])
 
         self._logger.info("Calculating lines in file ...")
         self.config.NUM_INPUT_LINES = int(sum(1 for line in open(self.config.INPUT_TRANSCRIPT_FILE)))

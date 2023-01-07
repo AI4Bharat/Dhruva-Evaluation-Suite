@@ -112,6 +112,8 @@ if __name__ == "__main__":
         {
             "plugins": [
                 "IndicSUPERBKnownDataset",
+                "IndicSUPERBUnknownDataset",
+                "IndicSUPERBTestTranscripts",
                 "MUCSHindiDataset",
                 # "ASRPreProcessor",
                 "MUCSPreProcessor",
