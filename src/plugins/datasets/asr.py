@@ -8,7 +8,7 @@ from typing import List, Any
 from tqdm import tqdm
 from plugins import PluginBase
 from config import BaseConfig
-from plugins.datasets.config import IndicSUPERBTestKnownConfig, IndicSUPERBTestUnknownConfig, MUCSHindiConfig, IndicSUPERBTestTranscriptsConfig
+from plugins.datasets.config import IndicSUPERBTestKnownConfig, IndicSUPERBTestUnknownConfig, MUCSHindiConfig
 
 
 class DatasetBase(PluginBase):
@@ -58,5 +58,5 @@ def dataset_factory(class_name, config):
 
 IndicSUPERBKnownDataset = dataset_factory("IndicSUPERBKnownDataset", IndicSUPERBTestKnownConfig())
 IndicSUPERBUnknownDataset = dataset_factory("IndicSUPERBUnknownDataset", IndicSUPERBTestUnknownConfig())
-IndicSUPERBTestTransctipts = dataset_factory("IndicSUPERBTestTranscripts", IndicSUPERBTestTranscriptsConfig())
+#CommonVoiceDataset = dataset_factory("CommonVoiceDataset", CommonVoiceConfig())
 MUCSHindiDataset = dataset_factory("MUCSHindiDataset", MUCSHindiConfig())

@@ -113,12 +113,13 @@ if __name__ == "__main__":
             "plugins": [
                 "IndicSUPERBKnownDataset",
                 "IndicSUPERBUnknownDataset",
-                "IndicSUPERBTestTranscripts",
                 "MUCSHindiDataset",
+                #"CommonVoiceDataset",
                 # "ASRPreProcessor",
                 "MUCSPreProcessor",
                 "IndicSUPERBKnownPreProcessor",
                 "IndicSUPERBUnknownPreProcessor",
+                "CommonVoicePreProcessor",
                 #"ASRBatchE2EModel",
                 #"ASRBatchE2EScorer",
                 #"WERMetric"
