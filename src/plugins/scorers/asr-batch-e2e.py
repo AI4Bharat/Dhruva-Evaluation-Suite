@@ -38,7 +38,7 @@ class ASRBatchE2EScorer(PluginBase):
         self.asr_config = ASRBatchInputValidation(**self.kwargs["scorer_config"])
 
         # This reference won't work. Change
-        self.preprocessor_config = IndicSUPERBTestUnknownConfig()
+        self.preprocessor_config = IndicSUPERBTestKnownConfig()
 
     def read_inputs(self) -> Dict:
         with open(self.preprocessor_config.PREPROCESSED_FILE, "r") as ipf:
