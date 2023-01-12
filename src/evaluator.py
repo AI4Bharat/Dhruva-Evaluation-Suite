@@ -116,13 +116,14 @@ if __name__ == "__main__":
                 "MUCSHindiDataset",
                 #"CommonVoiceDataset",
                 # "ASRPreProcessor",
-                "MUCSPreProcessor",
-                "IndicSUPERBKnownPreProcessor",
-                "IndicSUPERBUnknownPreProcessor",
-                "CommonVoicePreProcessor",
-                #"ASRBatchE2EModel",
-                #"ASRBatchE2EScorer",
-                #"WERMetric"
+                #"MUCSPreProcessor",
+                #"IndicSUPERBKnownPreProcessor",
+                #"IndicSUPERBUnknownPreProcessor",
+                #"CommonVoicePreProcessor",
+                # "ASRBatchE2EModel",
+                "IndicTinyASRModel",
+                "ASRBatchE2EScorer",
+                "WERMetric"
             ]
         }
     )

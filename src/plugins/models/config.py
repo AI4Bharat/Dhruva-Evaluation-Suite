@@ -39,3 +39,16 @@ class ASRBatchConfig(BaseConfig):
     # Network
     HTTP_URL: str = "aml-asr-hi-endpoint.eastus.inference.ml.azure.com"
     API_KEY: str = "9i2vidTyIdmWO1vpDbFJAk8trK2J5rTS"
+
+
+@dataclass
+class IndicTinyASRConfig(BaseConfig):
+    MODEL_NAME: str = "IndicTinyASR"
+    MODEL_VERSION: str = "1"
+
+    # Network
+    HTTP_URL: str = "https://asr-api.ai4bharat.org/asr/v1/recognize/hi"
+    API_KEY: str = "9i2vidTyIdmWO1vpDbFJAk8trK2J5rTS"
+    language_code = "hi"
+    sampling_rate = 48000
+    post_processors = []

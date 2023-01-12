@@ -19,7 +19,7 @@ from tritonclient.utils import InferenceServerException
 from plugins import PluginBase
 from config import BaseConfig
 from plugins.scorers.config import ASRBatchInputValidation
-from plugins.preprocessors.config import MUCSHindiConfig
+from plugins.preprocessors.config import MUCSHindiConfig, CommonVoiceConfig, IndicSUPERBTestKnownConfig, IndicSUPERBTestUnknownConfig
 
 
 class ASRBatchE2EScorer(PluginBase):
@@ -38,7 +38,7 @@ class ASRBatchE2EScorer(PluginBase):
         self.asr_config = ASRBatchInputValidation(**self.kwargs["scorer_config"])
 
         # This reference won't work. Change
-        self.preprocessor_config = MUCSHindiConfig()
+        self.preprocessor_config = IndicSUPERBTestUnknownConfig()
 
     def read_inputs(self) -> Dict:
         with open(self.preprocessor_config.PREPROCESSED_FILE, "r") as ipf:
@@ -101,3 +101,5 @@ class ASRBatchE2EScorer(PluginBase):
             headers=self.model.headers
         )
         self._logger.info(json.dumps(statistics, indent=4))
+
+

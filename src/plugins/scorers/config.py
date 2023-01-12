@@ -22,4 +22,4 @@ class BaseConfig():
 class ASRBatchInputValidation(BaseConfig):
     BATCH_SIZE: int = 1
     ITERATIONS: int = 10
-    OUTPUT_FILE: Path = Path("../datasets/outputs/MUCS/Hindi/test/output.jsonl")
+    OUTPUT_FILE: Path = Path("../datasets/outputs/IndicSUPERB/test/unknown/Hindi/output.jsonl")
