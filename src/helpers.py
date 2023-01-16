@@ -23,3 +23,9 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 # add the handler to the logger
 logger.addHandler(handler)
+
+
+def class_factory(class_name, bases, config):
+    if not isinstance(bases, tuple):
+        bases = tuple(bases)
+    return type(class_name, bases, config)

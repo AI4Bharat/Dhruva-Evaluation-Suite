@@ -7,6 +7,7 @@ from typing import List, Any, Dict, Tuple
 
 from tqdm import tqdm
 import numpy as np
+import soundfile as sf
 
 from plugins import PluginBase
 from config import BaseConfig
@@ -46,8 +47,12 @@ class ASRPreProcessor(PluginBase):
         else:
             raise TypeError(f"Check File type for {inp_file}. Did you mean .tar or .tar.gz?")
 
-    def load_wav(self, path: Path) -> np.array:
-        return np.fromfile(path, dtype="uint8").tolist()
+    # def load_wav(self, path: Path) -> np.array:
+    #     return np.fromfile(path, dtype="uint8").tolist()
+
+    def load_wav(self, path: Path):
+        audio, _ = sf.read(path)
+        return audio.tolist()
 
     def preprocess(self):
         """
@@ -59,7 +64,7 @@ class ASRPreProcessor(PluginBase):
         for raw_audio, sentence in self.get_inputs():
             no_ood, preprocessed_sentence = cleaning_pipeline(dict_characters, sentence, self.config.LANG_CODE)
             audio = self.load_wav(raw_audio)
-            yield no_ood, {"filename": raw_audio, "audio": audio, "transcript": preprocessed_sentence + "\n"}
+            yield no_ood, {"filename": raw_audio, "audio": audio, "transcript": preprocessed_sentence}
 
     def write_preprocessed_output(self):
         total_sents = 0
@@ -91,6 +96,10 @@ class ASRPreProcessor(PluginBase):
         :param kwargs: possible keyword arguments for the plugin
         :return: None
         """
+
+        if os.path.exists(self.config.PREPROCESSED_FILE):
+            return self.config.PREPROCESSED_FILE
+
         self.extract_files()
         self.write_preprocessed_output()
         return self.config.PREPROCESSED_FILE
@@ -117,3 +126,99 @@ class MUCSPreProcessor(ASRPreProcessor):
                 elements = line.split(" ")
                 yield os.path.join(self.config.INPUT_AUDIO_FILES, elements[0] + ".wav"), " ".join(elements[1:])
                 # break
+
+class IndicSUPERBKnownPreProcessor(ASRPreProcessor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # intialising configs here to be able to override via kwargs
+        self.config = IndicSUPERBTestKnownConfig()
+
+        self._logger.info("Converting m4a to wav ...")
+        # Set the directory containing the .m4a files
+        directory = self.config.INPUT_AUDIO_FILES
+        wav_directory = self.config.INPUT_WAVAUDIO_FILES
+        # Get a list of all the .m4a files in the directory
+        m4a_files = [f for f in os.listdir(directory) if f.endswith('.m4a')]
+        os.makedirs(wav_directory,exist_ok=True)
+        if os.path.exists(wav_directory) and len(os.listdir(wav_directory)) == len(m4a_files):
+            pass
+        else:
+        # Convert each .m4a file to .wav format and delete the original
+            for m4a_file in tqdm(m4a_files):
+                wav_file = m4a_file[:-4] + '.wav'
+                subprocess.run(['ffmpeg', '-hide_banner', '-i', os.path.join(directory,m4a_file),'-ar', '16k', '-ac', '1', '-hide_banner', '-loglevel', 'error', os.path.join(wav_directory,wav_file)])
+
+        self._logger.info("Calculating lines in file ...")
+        self.config.NUM_INPUT_LINES = int(sum(1 for line in open(self.config.INPUT_TRANSCRIPT_FILE)))
+        self._logger.info(f"Number of lines: {self.config.NUM_INPUT_LINES}")
+
+    def get_inputs(self, *args, **kwargs):
+        with open(self.config.INPUT_TRANSCRIPT_FILE, "r") as read_fp:
+            for line in read_fp:
+                elements = line.split("\t")
+                yield os.path.join(self.config.INPUT_WAVAUDIO_FILES, elements[0].replace('.m4a','.wav')), " ".join(elements[1:])
+
+
+class IndicSUPERBUnknownPreProcessor(ASRPreProcessor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # intialising configs here to be able to override via kwargs
+        self.config = IndicSUPERBTestUnknownConfig()
+
+        self._logger.info("Converting m4a to wav ...")
+        # Set the directory containing the .m4a files
+        directory = self.config.INPUT_AUDIO_FILES
+        wav_directory = self.config.INPUT_WAVAUDIO_FILES
+        # Get a list of all the .m4a files in the directory
+        m4a_files = [f for f in os.listdir(directory) if f.endswith('.m4a')]
+        os.makedirs(wav_directory,exist_ok=True)
+        if os.path.exists(wav_directory) and len(os.listdir(wav_directory)) == len(m4a_files):
+            pass
+        else:
+        # Convert each .m4a file to .wav format 
+            for m4a_file in tqdm(m4a_files):
+                wav_file = m4a_file[:-4] + '.wav'
+                subprocess.run(['ffmpeg', '-hide_banner', '-i', os.path.join(directory,m4a_file),'-ar', '16k', '-ac', '1', '-hide_banner', '-loglevel', 'error', os.path.join(wav_directory,wav_file)])
+
+        self._logger.info("Calculating lines in file ...")
+        self.config.NUM_INPUT_LINES = int(sum(1 for line in open(self.config.INPUT_TRANSCRIPT_FILE)))
+        self._logger.info(f"Number of lines: {self.config.NUM_INPUT_LINES}")
+
+    def get_inputs(self, *args, **kwargs):
+        with open(self.config.INPUT_TRANSCRIPT_FILE, "r") as read_fp:
+            for line in read_fp:
+                elements = line.split("\t")
+                yield os.path.join(self.config.INPUT_WAVAUDIO_FILES, elements[0].replace('.m4a','.wav')), " ".join(elements[1:])
+
+
+class CommonVoicePreProcessor(ASRPreProcessor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # intialising configs here to be able to override via kwargs
+        self.config = CommonVoiceConfig()
+        
+        self._logger.info("Converting mp3 to wav ...")
+        # Set the directory containing the .m4a files
+        directory = self.config.INPUT_AUDIO_FILES
+        wav_directory = self.config.INPUT_WAVAUDIO_FILES
+        # Get a list of all the .m4a files in the directory
+        mp3_files = [f for f in os.listdir(directory) if f.endswith('.mp3')]
+        os.makedirs(wav_directory,exist_ok=True)
+        if os.path.exists(wav_directory) and len(os.listdir(wav_directory)) == len(mp3_files):
+            pass
+        else:
+        # Convert each .m4a file to .wav format 
+            for mp3_file in tqdm(mp3_files):
+                wav_file = mp3_file[:-4] + '.wav'
+                subprocess.run(['ffmpeg', '-hide_banner', '-i', os.path.join(directory,mp3_file),'-ar', '16k', '-ac', '1', '-hide_banner', '-loglevel', 'error', os.path.join(wav_directory,wav_file)])
+
+        self._logger.info("Calculating lines in file ...")
+        self.config.NUM_INPUT_LINES = int(sum(1 for line in open(self.config.INPUT_TRANSCRIPT_FILE)))
+        self._logger.info(f"Number of lines: {self.config.NUM_INPUT_LINES}")
+
+    def get_inputs(self, *args, **kwargs):
+        with open(self.config.INPUT_TRANSCRIPT_FILE, "r") as read_fp:
+            next(read_fp)
+            for line in read_fp:
+                elements = line.split("\t")
+                yield os.path.join(self.config.INPUT_WAVAUDIO_FILES, elements[1].replace('.mp3','.wav')), " ".join(elements[2])

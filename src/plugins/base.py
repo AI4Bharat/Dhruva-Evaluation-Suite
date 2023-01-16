@@ -8,7 +8,7 @@ from config import BaseConfig
 
 
 class PluginRegistry(type):
-    plugin_registries: Dict = {}
+    plugin_registry: Dict = {}
 
     def __init__(cls, name, bases, attrs):
         super().__init__(cls)
@@ -16,7 +16,7 @@ class PluginRegistry(type):
         if name != 'PluginBase':
             # print("inside meta: ", name)
             cls._logger.info(f"Creating plugin: {name}")
-            PluginRegistry.plugin_registries[name] = cls
+            PluginRegistry.plugin_registry[name] = cls
 
 
 class PluginBase(object, metaclass=PluginRegistry):
@@ -37,7 +37,8 @@ class PluginBase(object, metaclass=PluginRegistry):
         Entry init block for plugins
         :param config: options for the plugin
         """
-        self.config = PluginConfig()
+        # self.config = PluginConfig()
+        pass
 
     def invoke(self, *args, **kwargs) -> Any:
         """
