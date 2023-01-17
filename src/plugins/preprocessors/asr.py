@@ -132,7 +132,7 @@ class IndicSUPERBKnownPreProcessor(ASRPreProcessor):
         m4a_files = [f for f in os.listdir(directory) if f.endswith('.m4a')]
         os.makedirs(wav_directory,exist_ok=True)
         if os.path.exists(wav_directory) and len(os.listdir(wav_directory)) == len(m4a_files):
-            pass
+            self._logger.info("Wav Files exist!")
         else:
         # Convert each .m4a file to .wav format and delete the original
             for m4a_file in tqdm(m4a_files):
@@ -164,7 +164,7 @@ class IndicSUPERBUnknownPreProcessor(ASRPreProcessor):
         m4a_files = [f for f in os.listdir(directory) if f.endswith('.m4a')]
         os.makedirs(wav_directory,exist_ok=True)
         if os.path.exists(wav_directory) and len(os.listdir(wav_directory)) == len(m4a_files):
-            pass
+            self._logger.info("Wav Files exist!")
         else:
         # Convert each .m4a file to .wav format 
             for m4a_file in tqdm(m4a_files):
@@ -196,7 +196,7 @@ class CommonVoicePreProcessor(ASRPreProcessor):
         mp3_files = [f for f in os.listdir(directory) if f.endswith('.mp3')]
         os.makedirs(wav_directory,exist_ok=True)
         if os.path.exists(wav_directory) and len(os.listdir(wav_directory)) == len(mp3_files):
-            pass
+            self._logger.info("Wav Files exist!")
         else:
         # Convert each .m4a file to .wav format 
             for mp3_file in tqdm(mp3_files):
@@ -212,4 +212,4 @@ class CommonVoicePreProcessor(ASRPreProcessor):
             next(read_fp)
             for line in read_fp:
                 elements = line.split("\t")
-                yield os.path.join(self.config.INPUT_WAVAUDIO_FILES, elements[1].replace('.mp3','.wav')), " ".join(elements[2])
+                yield os.path.join(self.config.INPUT_WAVAUDIO_FILES, elements[1].replace('.mp3','.wav')), " ".join(elements[2].split(" "))

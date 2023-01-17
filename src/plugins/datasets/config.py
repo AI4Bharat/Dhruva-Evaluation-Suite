@@ -43,12 +43,12 @@ class MUCSHindiConfig(BaseDatasetConfig):
     def __post_init__(self):
         Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
 
-# @dataclass
-# class CommonVoiceConfig(BaseDatasetConfig):
-#     DATASET_URL: str = "https://mozilla-common-voice-datasets.s3.dualstack.us-west-2.amazonaws.com/cv-corpus-12.0-2022-12-07/cv-corpus-12.0-2022-12-07-en.tar.gz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQ3GQRTO3PT7OZ2RB%2F20230107%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230107T212122Z&X-Amz-Expires=43200&X-Amz-Security-Token=FwoGZXIvYXdzEAcaDKfrOZQn91YKQB66FyKSBJFddH0aOA8lwaS0eDgkjwyjeAlXgW9XBkk5OWFTLyGH%2Bhuf%2BLBQBtxvjzPV6gXj50kKSn9HDAvJWwrBpnPDUuJo4f3rstohO9%2BhfvDKRx%2Bzhes6CE3mNsX7wlE0p%2BQrxWRo%2FnqQUukF6wXnivSoKBre7eBTe3CsgN7AiQX%2BhuTuuqCoMmEGmaujStO0kJ3%2FEwPtooQGogAdvRvuzFcQ1ecRgNLn84keH37xiF%2FlQhXpgRaiVO6gSzWdyqhyBOpNx0FDIvJqSTLcd6pqFhdK2xGJppp72yNHjCy94DIHMF1GpVWSSJvoQgCbpYuP47vUowfK9jTO2Ci5qrQxWzdZuawEFdDlmvVkJEaBLL%2FGMKfvSjTEEW0GdWermi2TJBPBvBQGPY1cxrmkftlGJzBvKso0fsSRWEkF5eT4rgNJVLcSuX0qxZhU7XXqy9g4t%2FEmBei7uGgT0FVfMXLpx4Xz9mf6942wmPpAAanMQpSCaXz%2B7at5KcLh1g9I78l9Xpdgw1AQfLmb8pqRfXdYuAC5ZAvLvj0argK%2FYmeNO6Tjwxc7PoDJDoO7eNVxgfviODzr2ZMGrxkz3O1ZSYcTIt%2FWqb5n%2B1JJ1t%2B91Bm%2BaMhRmag9lbvu7vHo2vzB%2FCIb2Xr5l8oEWeOBnJmXn6xyR7%2Bgp8I7AdU48DDGbAgWG6Tamda3nI8XimaacsA%2BeTNwpe0UWLjFKMTA550GMipt2y0L6k8zBJEJToljaSm0WWViyK0ChgOWB5NYGACjIZAm3y6uc4TaOEQ%3D&X-Amz-Signature=aec726f945ff9b71a7e1de158a0f655280dfb1e5298bce697231ba6ba5cb5d01&X-Amz-SignedHeaders=host"
-#     DATASET_VERSION: int = 12
-#     DATASET_NAME: str = "CommonVoice Corpus 12"
-#     LOCAL_PATH: Path = Path("../datasets/raw/CommonVoice/test.tar.gz")
+@dataclass
+class CommonVoiceConfig(BaseDatasetConfig):
+    DATASET_URL: str = "https://mozilla-common-voice-datasets.s3.dualstack.us-west-2.amazonaws.com/cv-corpus-12.0-2022-12-07/cv-corpus-12.0-2022-12-07-hi.tar.gz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQ3GQRTO3FK7VF5KR%2F20230117%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20230117T191146Z&X-Amz-Expires=43200&X-Amz-Security-Token=FwoGZXIvYXdzEPT%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDNQlFRF2bSCIewoyqiKSBBCpVSvVcBaXWnpUXigsShfG3y62MYxIJ9hdFHp0ozvkOUIpky%2BHDzaK0niS5LpL62vMgkxL12gjgMk7Sba9lsv%2B%2Bnfwly8hWJZB5o7RHGqKwvtcitIjPbHxewUp%2B9Wyftt8A430CuvZP1b%2BmK7JLTROt0ouEu1%2B84lRP9kV%2FAUyeGR4dvRXn0EgNv%2F6OrWgyfV%2FSCqAHoeoCD1j6%2B0sM6SZU3S2YrUIm8OpNRGSqblYqgitAfOKi%2B6LW48kQQqF0e%2BwgZtL%2BMDnZSq%2Fx8SZcLU6ISeAXNAjCTFfAx7QVcZmmhdVdDYZF5uvfXNw8EP92aqK67Y7%2F9wGdiRn2eqXD7lRRYV%2BBT1lPFRA%2B606JnSHrqALL%2F2%2FaiV%2BjWKy8TeMUIsavXRJVa1yIgOKN%2FAM%2BO0jyk3FbWikBQnuA46sePo995w6p9vynj3z0xukvG2HegSr1zfRIvGwkcO6nZEhLLQmVSbBPH9Hvl2FuZaUNoMCGBof14wTTWur%2F6sKUUXziSGyBe7ee59WZJeEa6CrRxUDZMT5CvMcsJjIbrZGTbX4MgC0gOK7QQrSTzBkifVoDwRgpqsnYSZUMqhCH2R5C8Ln0UkiEiYiXgP9W64L22KZatO4iTo1z77ENaYwx4gu%2BqoKgaRgGzvBsa5BtHE2g2rMna6RofHVmjLdAIG8cYXuGsAGFk6JJDNYHVyyGLwvCu%2F9KNfUm54GMippzd%2BgoasKFbZOS7q2TLcee8TM5BgFj7u9xG8TfgD7uqH%2BaYIjDTQxVmU%3D&X-Amz-Signature=d8d3323388a6995aa718b1f21ba3f326e7d504924eff74bc7692e732eeaa6e17&X-Amz-SignedHeaders=host"
+    DATASET_VERSION: int = 12
+    DATASET_NAME: str = "CommonVoice Corpus 12"
+    LOCAL_PATH: Path = Path("../datasets/raw/CommonVoice/test.tar.gz")
 
-#     def __post_init__(self):
-#         Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)

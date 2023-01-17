@@ -124,7 +124,7 @@ class IndicTinyASRModel(PluginBase):
        
         resp = requests.post(self.asr_config.HTTP_URL, headers=self.headers, data=json.dumps(payload))
         print(json.loads(resp.text)["output"][0]["source"])
-        return json.loads(resp.text)["output"][0]["source"]
+        return [json.loads(resp.text)["output"][0]["source"]]
         # result_response = response.get_response()
         # encoded_result = response.as_numpy("TRANSCRIPTS")
         # return [result.decode("utf-8") for result in encoded_result.tolist()]

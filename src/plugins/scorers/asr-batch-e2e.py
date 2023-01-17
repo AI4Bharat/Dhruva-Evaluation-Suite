@@ -38,7 +38,7 @@ class ASRBatchE2EScorer(PluginBase):
         self.asr_config = ASRBatchInputValidation(**self.kwargs["scorer_config"])
 
         # This reference won't work. Change
-        self.preprocessor_config = IndicSUPERBTestKnownConfig()
+        self.preprocessor_config = MUCSHindiConfig()
 
     def read_inputs(self) -> Dict:
         with open(self.preprocessor_config.PREPROCESSED_FILE, "r") as ipf:
@@ -96,10 +96,10 @@ class ASRBatchE2EScorer(PluginBase):
         self._logger.info("Total Time Taken {}".format(total_time))
         # self._logger.info("RTFX is: {}".format(self.asr_config.ITERATIONS * np.sum(batch_data_dur.ravel()) / total_time))
 
-        statistics = self.model.triton_client.get_inference_statistics(
-            model_name=self.model.asr_config.MODEL_NAME,
-            headers=self.model.headers
-        )
-        self._logger.info(json.dumps(statistics, indent=4))
+        # statistics = self.model.triton_client.get_inference_statistics(
+        #     model_name=self.model.asr_config.MODEL_NAME,
+        #     headers=self.model.headers
+        # )
+        # self._logger.info(json.dumps(statistics, indent=4))
 
 
