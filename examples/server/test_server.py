@@ -15,7 +15,8 @@ from pydantic import BaseModel
 app = FastAPI(debug=True)
 
 headers = {}
-headers["Authorization"] = f"Bearer 9i2vidTyIdmWO1vpDbFJAk8trK2J5rTS"
+# headers["Authorization"] = f"Bearer 9i2vidTyIdmWO1vpDbFJAk8trK2J5rTS"
+headers["Authorization"] = f"Bearer 3GxAZcoEa5eyxf4QC6hIiz4PvI7cJheL"
 
 
 def get_client():
@@ -49,13 +50,13 @@ def get_nmt_client():
         concurrency=10,
         # verbose=False
     )
-    health_ctx = triton_client.is_server_ready()
+    health_ctx = triton_client.is_server_ready(headers=headers)
     print("Is server ready - {}".format(health_ctx))
     return triton_client
 
-triton_client = get_client()
+# triton_client = get_client()
 triton_nmt_client = get_nmt_client()
-triton_aws_client = get_aws_client()
+# triton_aws_client = get_aws_client()
 
 
 class Input(BaseModel):
