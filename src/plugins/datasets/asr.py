@@ -7,8 +7,11 @@ from typing import List, Any
 
 from tqdm import tqdm
 from plugins import PluginBase
+from helpers import class_factory
 from config import BaseConfig
-from plugins.datasets.config import IndicSUPERBTestKnownConfig, IndicSUPERBTestUnknownConfig, MUCSHindiConfig, CommonVoiceConfig
+from plugins.datasets.config import (
+    IndicSUPERBTestKnownConfig, IndicSUPERBTestUnknownConfig, MUCSHindiConfig, CommonVoiceConfig
+)
 
 
 class DatasetBase(PluginBase):
@@ -53,10 +56,8 @@ class DatasetBase(PluginBase):
 # Downlaod all versions - splits - langs of a dataset within a single dataset class
 # Going for one class per version - lang - split as of now
 
-def dataset_factory(class_name, config):
-    return type(class_name, (DatasetBase,), {"config": config})
 
-IndicSUPERBKnownDataset = dataset_factory("IndicSUPERBKnownDataset", IndicSUPERBTestKnownConfig())
-IndicSUPERBUnknownDataset = dataset_factory("IndicSUPERBUnknownDataset", IndicSUPERBTestUnknownConfig())
-CommonVoiceDataset = dataset_factory("CommonVoiceDataset", CommonVoiceConfig())
-MUCSHindiDataset = dataset_factory("MUCSHindiDataset", MUCSHindiConfig())
+IndicSUPERBKnownDataset = class_factory("IndicSUPERBKnownDataset", (DatasetBase,), {"config": IndicSUPERBTestKnownConfig()})
+IndicSUPERBUnknownDataset = class_factory("IndicSUPERBUnknownDataset", (DatasetBase,), {"config": IndicSUPERBTestUnknownConfig()})
+CommonVoiceDataset = class_factory("CommonVoiceDataset", (DatasetBase,), {"config": CommonVoiceConfig()})
+MUCSHindiDataset = class_factory("MUCSHindiDataset", (DatasetBase,), {"config": MUCSHindiConfig()})

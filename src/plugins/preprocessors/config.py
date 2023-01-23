@@ -7,6 +7,7 @@ from dataclasses import dataclass
 @dataclass
 class BaseDatasetConfig():
     EXTRACT_PATH: Path
+    NUM_INPUT_LINES: int = 0
 
 
 @dataclass
@@ -41,12 +42,10 @@ class IndicSUPERBTestUnknownConfig(BaseDatasetConfig):
 class MUCSHindiConfig(BaseDatasetConfig):
     EXTRACT_PATH: Path = Path("../datasets/raw/MUCS/Hindi/")
     INPUT_TRANSCRIPT_FILE: Path = Path("../datasets/raw/MUCS/Hindi/test/transcription.txt")
-    INPUT_AUDIO_FILES: Path = Path("../datasets/raw/MUCS/Hindi/test/audio/")
+    INPUT_AUDIO_FILES: Path = Path("../datasets/raw/MUCS/Hindi/")
     PREPROCESSED_FILE: Path = Path("../datasets/preprocessed/MUCS/Hindi/test/preprocessed.jsonl")
     LANG_CODE: str = "hi"
     BATCH_SIZE: int = 100
-
-    NUM_INPUT_LINES: int = 0
 
     def __post_init__(self):
         Path(os.path.dirname(self.EXTRACT_PATH)).mkdir(parents=True, exist_ok=True)
@@ -59,6 +58,22 @@ class CommonVoiceConfig(BaseDatasetConfig):
     INPUT_AUDIO_FILES: Path = Path("../datasets/raw/CommonVoice/hi/clips/")
     INPUT_WAVAUDIO_FILES: Path = Path("../datasets/raw/CommonVoice/hi/audio_wav/")
     PREPROCESSED_FILE: Path = Path("../datasets/preprocessed/CommonVoice/Hindi/preprocessed.jsonl")
+    LANG_CODE: str = "hi"
+    BATCH_SIZE: int = 100
+
+    NUM_INPUT_LINES: int = 0
+
+    def __post_init__(self):
+        Path(os.path.dirname(self.EXTRACT_PATH)).mkdir(parents=True, exist_ok=True)
+        Path(os.path.dirname(self.PREPROCESSED_FILE)).mkdir(parents=True, exist_ok=True)
+
+
+@dataclass
+class IndicTTSConfig(BaseDatasetConfig):
+    EXTRACT_PATH: Path = Path("../datasets/raw/IndicTTS/hi/")
+    INPUT_TRANSCRIPT_FILE: Path = Path("../datasets/raw/IndicTTS/Hindi/metadata_test.csv")
+    INPUT_AUDIO_FILES: Path = Path("../datasets/raw/IndicTTS/Hindi/wavs-22k/")
+    PREPROCESSED_FILE: Path = Path("../datasets/preprocessed/IndicTTS/Hindi/preprocessed.jsonl")
     LANG_CODE: str = "hi"
     BATCH_SIZE: int = 100
 

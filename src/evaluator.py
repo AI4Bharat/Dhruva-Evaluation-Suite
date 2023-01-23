@@ -1,7 +1,12 @@
+# This is required
+import gevent.monkey
+gevent.monkey.patch_all()
+
+
 import os
 import logging
 from abc import ABC
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from dataclasses import dataclass
 
 from pathlib import Path
@@ -54,12 +59,16 @@ def load_modules_in_path():
                     raise
 
 
+def get_all_plugins() -> List:
+    return [name for name, _ in PluginRegistry.plugin_registry.items()]
+
+
 class EvaluatorBase():
     _plugins = []
 
     def __init__(self, config: Dict) -> None:
         load_modules_in_path()
-        self.plugin_registry = PluginRegistry.plugin_registries
+        self.plugin_registry = get_all_plugins()
         self.config = config
         self.add_steps()
         self._logger = logging.getLogger(BaseConfig.LOGGER)
@@ -67,7 +76,12 @@ class EvaluatorBase():
 
     def add_steps(self, *args, **kwargs) -> None:
         # Add complex ordering or such requirements in the future
-        self._plugins = {name: self.plugin_registry[name] for name in self.config["plugins"]}
+        self._plugins = {
+            name: {
+                "plugin": PluginRegistry.plugin_registry[name],
+                "config": config
+            } for name, config in self.config["plugins"].items()
+        }
 
     def eval(self) -> None:
         raise NotImplementedError
@@ -79,16 +93,18 @@ class AccuracyEvaluator(EvaluatorBase):
         prev_output = None
         for name, plugin in self._plugins.items():
             name = name.lower()
-            p = plugin(**self.config)
+            self._logger.info(f"In {name}")
+            self.config["user_config"] = plugin["config"]
+            p = plugin["plugin"](**self.config)
 
             if "model" in name.lower():
-                self.config["model"] = plugin
+                self.config["model"] = plugin["plugin"]
                 continue
             elif "postprocessor" in name.lower():
-                self.config["postprocessor"] = plugin
+                self.config["postprocessor"] = plugin["plugin"]
                 continue
             elif "metrics" in name.lower():
-                self.config["metrics"] = plugin
+                self.config["metrics"] = plugin["plugin"]
                 continue
 
             # ToDo
@@ -104,27 +120,38 @@ class AccuracyEvaluator(EvaluatorBase):
             else:
                 pass
 
-            self._logger.info(f"self config: {self.config}")
+        self._logger.info(f"Completed run")
 
 
 if __name__ == "__main__":
     eval = AccuracyEvaluator(
         {
-            "plugins": [
-                "IndicSUPERBKnownDataset",
-                "IndicSUPERBUnknownDataset",
-                "MUCSHindiDataset",
-                "CommonVoiceDataset",
-                # "ASRPreProcessor",
-                "MUCSPreProcessor",
-                # "IndicSUPERBKnownPreProcessor",
-                # "IndicSUPERBUnknownPreProcessor",
-                # "CommonVoicePreProcessor",
-                # "ASRBatchE2EModel",
-                "IndicTinyASRModel",
-                "ASRBatchE2EScorer",
-                "WERMetric"
-            ]
+            "plugins": {
+                # "IndicSUPERBKnownDataset": {},
+                # "IndicSUPERBUnknownDataset": {},
+                # "MUCSHindiDataset": {},
+                # "CommonVoiceDataset": {},
+                # "ASRPreProcessor": {},
+                # "MUCSPreProcessor": {},
+                # "IndicTTSPreProcessor" : {},
+                # "IndicSUPERBKnownPreProcessor": {},
+                #  "IndicSUPERBUnknownPreProcessor": {},
+                # "CommonVoicePreProcessor": {},
+                # "ASRBatchE2EModel": {},
+                # "ASRBatchOffConfModel": {},
+                # "IndicTTSModel" :{},
+                # "MUCSBatchOffConfScorer": {},
+                # "LocustASRScorer": {},
+                # "IndicSUPERBBatchOffConfScorer": {},
+                # "IndicSUPERBUnknownBatchOffConfScorer" : {},
+                # "IndicTTSScorer" : {},
+                # "MUCSBatchE2EScorer": {}
+                # "CommonVoiceBatchE2EScorer": {},
+                # "CommonVoiceBatchOffConfScorer" : {},
+                # "WERMetric": {},
+                # "TTS_f0" : {},
+                "TTS_mcd": {}
+            }
         }
     )
     eval.eval()

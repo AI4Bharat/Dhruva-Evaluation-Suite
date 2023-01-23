@@ -8,6 +8,7 @@ from typing import List, Any, Dict, Tuple
 import subprocess
 from tqdm import tqdm
 import numpy as np
+import soundfile as sf
 
 from plugins import PluginBase
 from config import BaseConfig
@@ -47,8 +48,12 @@ class ASRPreProcessor(PluginBase):
         else:
             raise TypeError(f"Check File type for {inp_file}. Did you mean .tar or .tar.gz?")
 
-    def load_wav(self, path: Path) -> np.array:
-        return np.fromfile(path, dtype="uint8").tolist()
+    # def load_wav(self, path: Path) -> np.array:
+    #     return np.fromfile(path, dtype="uint8").tolist()
+
+    def load_wav(self, path: Path):
+        audio, _ = sf.read(path)
+        return audio.tolist()
 
     def preprocess(self):
         """
@@ -60,7 +65,7 @@ class ASRPreProcessor(PluginBase):
         for raw_audio, sentence in self.get_inputs():
             no_ood, preprocessed_sentence = cleaning_pipeline(dict_characters, sentence, self.config.LANG_CODE)
             audio = self.load_wav(raw_audio)
-            yield no_ood, {"filename": raw_audio, "audio": audio, "transcript": preprocessed_sentence + "\n"}
+            yield no_ood, {"filename": raw_audio, "audio": audio, "transcript": preprocessed_sentence}
 
     def write_preprocessed_output(self):
         total_sents = 0
@@ -92,6 +97,10 @@ class ASRPreProcessor(PluginBase):
         :param kwargs: possible keyword arguments for the plugin
         :return: None
         """
+
+        if os.path.exists(self.config.PREPROCESSED_FILE):
+            return self.config.PREPROCESSED_FILE
+
         self.extract_files()
         self.write_preprocessed_output()
         return self.config.PREPROCESSED_FILE

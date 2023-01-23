@@ -6,7 +6,7 @@ from typing import List, Any
 from jiwer import wer
 from plugins import PluginBase
 # from plugins.metrics.config import WERConfig
-from plugins.scorers.config import ASRBatchInputValidation
+from plugins.scorers.config import MUCSScorerConfig, CommonVoiceScorerConfig, IndicSUPERBTestUnKnownScorerConfig
 
 
 class WERMetric(PluginBase):
@@ -19,7 +19,7 @@ class WERMetric(PluginBase):
         :param config: options for the plugin
         """
         self.kwargs = kwargs
-        self.scorer_config = ASRBatchInputValidation()
+        self.scorer_config = IndicSUPERBTestUnKnownScorerConfig()
         # self.config = None
 
     def invoke(self, *args, **kwargs) -> Any:
