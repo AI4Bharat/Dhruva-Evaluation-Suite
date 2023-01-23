@@ -9,6 +9,7 @@ from tqdm import tqdm
 import numpy as np
 import soundfile as sf
 
+import helpers
 from plugins import PluginBase
 from config import BaseConfig
 from plugins.preprocessors.speech_transcript_cleaning import cleaning_pipeline, get_dict_chars
@@ -28,27 +29,6 @@ class ASRPreProcessor(PluginBase):
         """
         self.kwargs = kwargs
         self.config = None
-
-    def extract_files(self):
-        if ".tar" in self.kwargs["dataset_output"].suffixes:  # Expecting Path objects. Not filenames / strs
-            self.untar()
-
-    def untar(self):
-        self._logger.debug(f'{self.kwargs["dataset_output"]}, {self.kwargs["dataset_output"].suffixes}')
-
-        if ".gz" in self.kwargs["dataset_output"].suffixes:
-            tar = tarfile.open(self.kwargs["dataset_output"], "r:gz")
-            tar.extractall(path=self.config.EXTRACT_PATH)
-            tar.close()
-        elif ".tar" in self.kwargs["dataset_output"].suffixes:
-            tar = tarfile.open(self.kwargs["dataset_output"], "r:")
-            tar.extractall(path=self.config.EXTRACT_PATH)
-            tar.close()
-        else:
-            raise TypeError(f"Check File type for {inp_file}. Did you mean .tar or .tar.gz?")
-
-    # def load_wav(self, path: Path) -> np.array:
-    #     return np.fromfile(path, dtype="uint8").tolist()
 
     def load_wav(self, path: Path):
         audio, _ = sf.read(path)
@@ -100,7 +80,7 @@ class ASRPreProcessor(PluginBase):
         if os.path.exists(self.config.PREPROCESSED_FILE):
             return self.config.PREPROCESSED_FILE
 
-        self.extract_files()
+        helpers.extract_files(self.kwargs["dataset_output"], self.config.EXTRACT_PATH)
         self.write_preprocessed_output()
         return self.config.PREPROCESSED_FILE
 

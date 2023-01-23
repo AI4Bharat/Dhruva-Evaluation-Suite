@@ -1,10 +1,10 @@
 from typing import List
 
 import numpy as np
-from tqdm import tqdm
-import soundfile as sf
+# from tqdm import tqdm
+# import soundfile as sf
 import tritonclient.http as http_client
-from tritonclient.utils import InferenceServerException
+from tritonclient.utils import InferenceServerException, np_to_triton_dtype
 
 import gevent.ssl
 
@@ -32,16 +32,30 @@ def get_client():
 
 def get_aws_client():
     triton_client = http_client.InferenceServerClient(
-        url="15.207.122.54:8001",
-        concurrency=10
+        url="15.207.122.54:8000",
+        concurrency=40
     )
-    health_ctx = triton_client.is_server_ready(headers=headers)
+    health_ctx = triton_client.is_server_ready()
     print("Is server ready - {}".format(health_ctx))
     return triton_client
 
 
+def get_nmt_client():
+    triton_client = http_client.InferenceServerClient(
+        # url="20.193.155.199:5000",
+        url="indictrans--fairseq-t4.centralindia.inference.ml.azure.com",
+        ssl=True,
+        ssl_context_factory=gevent.ssl._create_default_https_context,
+        concurrency=10,
+        # verbose=False
+    )
+    health_ctx = triton_client.is_server_ready()
+    print("Is server ready - {}".format(health_ctx))
+    return triton_client
+
 triton_client = get_client()
-triton_aws_client = get_client()
+triton_nmt_client = get_nmt_client()
+triton_aws_client = get_aws_client()
 
 
 class Input(BaseModel):
@@ -81,7 +95,7 @@ async def index():
 
 
 @app.post("/infer_e2e")
-async def infer(ip: Input):
+async def infer2(ip: Input):
     # triton_client = get_client()
     inp = np.array(ip.inp, dtype=np.uint8)
     input0 = http_client.InferInput("WAVPATH", inp.shape, "UINT8")
@@ -117,15 +131,15 @@ async def infer(ip: Input):
 
 def pad_batch(batch_data):
     batch_data_lens = np.asarray([len(data) for data in batch_data], dtype=np.int32)
-    print("batch_data_lens: ", batch_data_lens)
+    # print("batch_data_lens: ", batch_data_lens)
     max_length = max(batch_data_lens)
     batch_size = len(batch_data)
 
     padded_zero_array = np.zeros((batch_size, max_length),dtype=np.float32)
-    print(padded_zero_array.shape)
+    # print(padded_zero_array.shape)
 
     for idx, data in enumerate(batch_data):
-        print(data.shape)
+        # print(data.shape)
         padded_zero_array[idx,0:batch_data_lens[idx]] = data
 
     return padded_zero_array, np.reshape(batch_data_lens,[-1,1])
@@ -134,7 +148,7 @@ def pad_batch(batch_data):
 @app.post("/infer")
 async def infer(ip: ULCAASR):
     raw_audio = np.array(ip.audio[0].audioContent)
-    print(raw_audio.shape)
+    # print(raw_audio.shape)
     o = pad_batch(raw_audio)
 
     input0 = http_client.InferInput("AUDIO_SIGNAL", o[0].shape, "FP32")
@@ -144,7 +158,8 @@ async def infer(ip: ULCAASR):
     output0 = http_client.InferRequestedOutput('TRANSCRIPTS')
 
     try:
-        response = triton_aws_client.async_infer(
+        response = triton_client.async_infer(
+        # response = triton_aws_client.async_infer(
             "offline_conformer",
             model_version='1',
             inputs=[input0, input1],
@@ -152,14 +167,70 @@ async def infer(ip: ULCAASR):
             headers=headers
         )
         # Testing
-        response = response._greenlet.get(block=True, timeout=2)
-        print(response.status_code)
-        # response = response.get_result(block=True, timeout=2)
-
+        # response = response._greenlet.get(block=True, timeout=4)
+        # print(response.status_code)
+        response = response.get_result(block=True, timeout=2)
     except Exception as e:
-        print("************: ", e)
-        raise HTTPException(status_code=502, detail="AML issue")
+        raise
+        # print("************: ", e)
+        # raise HTTPException(status_code=502, detail="AML issue")
 
     encoded_result = response.as_numpy("TRANSCRIPTS")
     res = [result.decode("utf-8") for result in encoded_result.tolist()]
+    print("res: ", res)
     return {"status": 200, "data": res}
+
+
+class ULCANMT(BaseModel):
+    text: str
+    source_language: str
+    target_language: str
+
+
+def get_string_tensor(string_value, tensor_name):
+    string_obj = np.array([string_value], dtype="object")
+    input_obj = http_client.InferInput(tensor_name, string_obj.shape, np_to_triton_dtype(string_obj.dtype))
+    input_obj.set_data_from_numpy(string_obj)
+    return input_obj
+
+
+@app.post("/infer_nmt")
+async def infer_nmt(ip: ULCANMT):
+    inputs = [
+        get_string_tensor(ip.text, "INPUT_TEXT"),
+        get_string_tensor(ip.source_language, "INPUT_LANGUAGE_ID"),
+        get_string_tensor(ip.target_language, "OUTPUT_LANGUAGE_ID")
+    ]
+    output0 = http_client.InferRequestedOutput("OUTPUT_TEXT")
+    response = triton_nmt_client.async_infer("nmt", model_version='1', inputs=inputs, outputs=[output0], headers=headers)
+    response = response.get_result(block=True, timeout=2)
+
+    encoded_result = response.as_numpy('OUTPUT_TEXT')
+    result = encoded_result.tolist()[0]
+    return {"status": 200, "data": result.decode("utf-8")}
+    # return {"status": 200, "data": "some text"}
+
+
+#  request_body, json_size = _get_inference_request(
+#             inputs=inputs,
+#             request_id=request_id,
+#             outputs=outputs,
+#             sequence_id=sequence_id,
+#             sequence_start=sequence_start,
+#             sequence_end=sequence_end,
+#             priority=priority,
+#             timeout=timeout)
+
+#     "v2/models/{}/versions/{}/infer".format(quote(model_name), model_version))
+
+# self._post(
+#     request_uri=request_uri,
+#     request_body=request_body,
+#     headers=headers,
+#     query_params=query_params
+# )
+
+# headers["Inference-Header-Content-Length"] = json_size
+
+# ssl_options=ssl_options,
+# ssl_context_factory=ssl_context_factory,

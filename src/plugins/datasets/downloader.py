@@ -9,9 +9,7 @@ from tqdm import tqdm
 from plugins import PluginBase
 from helpers import class_factory
 from config import BaseConfig
-from plugins.datasets.config import (
-    IndicSUPERBTestKnownConfig, IndicSUPERBTestUnknownConfig, MUCSHindiConfig, CommonVoiceConfig
-)
+import plugins.datasets.config as dataset_config
 
 
 class DatasetBase(PluginBase):
@@ -40,12 +38,14 @@ class DatasetBase(PluginBase):
             self._logger.info("Path exists! SKipping download...")
             return self.config.LOCAL_PATH
 
+        self._logger.info("downloading dataset...")
         self.download(self.config.DATASET_URL, self.config.LOCAL_PATH)
+        self._logger.info("finished downloading dataset...")
         return self.config.LOCAL_PATH
 
     # Add support for showing bytes / total bytes downloaded
     def download(self, url, local_path):
-        get_response = requests.get(url,stream=True)
+        get_response = requests.get(url, stream=True)
         with open(local_path, 'wb') as f:
             for chunk in tqdm(get_response.iter_content(chunk_size=1024*10)):
                 if chunk: # filter out keep-alive new chunks
@@ -57,7 +57,16 @@ class DatasetBase(PluginBase):
 # Going for one class per version - lang - split as of now
 
 
-IndicSUPERBKnownDataset = class_factory("IndicSUPERBKnownDataset", (DatasetBase,), {"config": IndicSUPERBTestKnownConfig()})
-IndicSUPERBUnknownDataset = class_factory("IndicSUPERBUnknownDataset", (DatasetBase,), {"config": IndicSUPERBTestUnknownConfig()})
-CommonVoiceDataset = class_factory("CommonVoiceDataset", (DatasetBase,), {"config": CommonVoiceConfig()})
-MUCSHindiDataset = class_factory("MUCSHindiDataset", (DatasetBase,), {"config": MUCSHindiConfig()})
+# ASR
+IndicSUPERBKnownDataset = class_factory("IndicSUPERBKnownDataset", (DatasetBase,), {"config": dataset_config.IndicSUPERBTestKnownConfig()})
+IndicSUPERBUnknownDataset = class_factory("IndicSUPERBUnknownDataset", (DatasetBase,), {"config": dataset_config.IndicSUPERBTestUnknownConfig()})
+CommonVoiceDataset = class_factory("CommonVoiceDataset", (DatasetBase,), {"config": dataset_config.CommonVoiceConfig()})
+MUCSHindiDataset = class_factory("MUCSHindiDataset", (DatasetBase,), {"config": dataset_config.MUCSHindiConfig()})
+
+# NMT
+FLORES200Dataset = class_factory("FLORESDataset", (DatasetBase,), {"config": dataset_config.FLORESDatasetConfig()})
+WAT21Dataset = class_factory("WAT21Dataset", (DatasetBase,), {"config": dataset_config.WAT21DatasetConfig()})
+WAT20Dataset = class_factory("WAT20Dataset", (DatasetBase,), {"config": dataset_config.WAT20DatasetConfig()})
+WMTDataset = class_factory("WMTDataset", (DatasetBase,), {"config": dataset_config.WMTDatasetConfig()})
+UFALDataset = class_factory("UFALDataset", (DatasetBase,), {"config": dataset_config.UFALDatasetConfig()})
+PMIDataset = class_factory("PMIDataset", (DatasetBase,), {"config": dataset_config.PMIDatasetConfig()})

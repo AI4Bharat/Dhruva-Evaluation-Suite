@@ -17,23 +17,41 @@ class ModelBase(PluginBase):
             self.client = kwargs["http_client"]
 
     def get_inputs(self, raw_data: list):
+        # For overriding
         return raw_data
 
-    def populate_payload(self, payload: Dict, raw_data: List):
+    def populate_payload(self, payload: Dict, raw_data: List, **kwargs):
         raise NotImplementedError
 
-    def generate_ULCA_payload(self, raw_data, model_type: str="ASR"):
+    def generate_ULCA_payload(self, raw_data, model_type, **kwargs):
         headers, payload = ULCAFormats[model_type]["headers"], ULCAFormats[model_type]["payload"]
-        payload = self.populate_payload(payload, raw_data)
+        payload = self.populate_payload(payload, raw_data, **kwargs)
         return headers, payload
 
     def invoke(self, *args, **kwargs):
         raw_data = self.get_inputs(kwargs["input"])
-        headers, payload = self.generate_ULCA_payload(raw_data, self.config.MODEL_TYPE)
-        return self.infer(self.config.HTTP_PROTOCOL + self.config.HTTP_DOMAIN + self.config.HTTP_URL, headers, payload)
+        headers, payload = self.generate_ULCA_payload(raw_data, self.config.MODEL_TYPE, **kwargs)
+        return self.infer(self.config.HTTP_PROTOCOL + self.config.HTTP_DOMAIN + self.config.HTTP_URL, headers, payload, kwargs.get("client"))
 
     def infer(self, url: str, headers: Dict, payload: Dict, client=None):
+        # self._logger.debug("inside infer")
         # For overriding locust client for performance testing
         if not client:
-            client = self.http_client
-        return client.post(url, headers=headers, data=json.dumps(payload)).json()
+            client = requests
+
+        # self._logger.debug("client")
+
+        # self._logger.debug(f"url: {url}")
+        # self._logger.debug(requests.post(url, headers=headers, data=json.dumps(payload)))
+        # self._logger.debug(requests.post(url, headers=headers, data=json.dumps(payload)).json())
+        with open("test_payload", "w") as f:
+            f.write("payload=" + json.dumps(payload))
+            f.write("headers=" + json.dumps(headers))
+
+        # self._logger.debug(requests.post(url, headers=headers, data=json.dumps(payload)))
+        return client.post(url, headers=headers, data=json.dumps(payload), timeout=5).json()
+        # return {"data": {"key": "value"}}
+        # return client.get("http://api.dhruva.ai4bharat.org:8090/")
+        # print("url: ", url)
+        # print(client)
+        # print(client.post("http://127.0.0.1:8000" + url, headers=headers, data=json.dumps(payload)))

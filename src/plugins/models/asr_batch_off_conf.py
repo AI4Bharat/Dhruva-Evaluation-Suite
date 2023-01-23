@@ -15,6 +15,6 @@ class ASRBatchOffConfModel(ModelBase):
         user_override = kwargs["model_config"] if "model_config" in kwargs and kwargs["model_config"] else {}
         self.config = ASRBatchConfig(user_override)
 
-    def populate_payload(self, payload: Dict, raw_data: list):
+    def populate_payload(self, payload: Dict, raw_data: list, **kwargs):
         payload["audio"][0]["audioContent"] = raw_data
         return payload

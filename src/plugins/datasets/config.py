@@ -54,3 +54,64 @@ class CommonVoiceConfig(BaseDatasetConfig):
 
     def __post_init__(self):
         Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+
+
+class FLORESDatasetConfig():
+    DATASET_URL: str = "https://tinyurl.com/flores200dataset"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "FLORES - devtest"
+    LOCAL_PATH: Path = Path("../datasets/raw/flores200_dataset/test.tar.gz")
+
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+
+
+class WAT21DatasetConfig():
+    DATASET_URL: str = "https://drive.google.com/file/d/1zcsiB_S4U4kTEktJO8uqfy6-vE1nOgJq/view?usp=share_link"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "WAT21 - devtest"
+    LOCAL_PATH: Path = Path("../datasets/raw/wat21/benchmarks.zip")
+
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+
+
+class WAT20DatasetConfig():
+    DATASET_URL: str = "https://drive.google.com/file/d/1zcsiB_S4U4kTEktJO8uqfy6-vE1nOgJq/view?usp=share_link"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "WAT20 - devtest"
+    LOCAL_PATH: Path = Path("../datasets/raw/wat20/benchmarks.zip")
+
+    def __post_init__(self):
+        print("creating path")
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+
+
+class WMTDatasetConfig():
+    DATASET_URL: str = "https://drive.google.com/file/d/1zcsiB_S4U4kTEktJO8uqfy6-vE1nOgJq/view?usp=share_link"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "WMT - devtest"
+    LOCAL_PATH: Path = Path("../datasets/raw/wmt/benchmarks.zip")
+
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+
+
+class UFALDatasetConfig():
+    DATASET_URL: str = "https://drive.google.com/file/d/1zcsiB_S4U4kTEktJO8uqfy6-vE1nOgJq/view?usp=share_link"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "UFAL - devtest"
+    LOCAL_PATH: Path = Path("../datasets/raw/ufal/benchmarks.zip")
+
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)
+
+
+class PMIDatasetConfig():
+    DATASET_URL: str = "https://drive.google.com/file/d/1zcsiB_S4U4kTEktJO8uqfy6-vE1nOgJq/view?usp=share_link"
+    DATASET_VERSION: int = 1
+    DATASET_NAME: str = "PMI - devtest"
+    LOCAL_PATH: Path = Path("../datasets/raw/pmi/benchmarks.zip")
+
+    def __post_init__(self):
+        Path(os.path.dirname(self.LOCAL_PATH)).mkdir(parents=True, exist_ok=True)

@@ -103,9 +103,9 @@ class AccuracyEvaluator(EvaluatorBase):
             elif "postprocessor" in name.lower():
                 self.config["postprocessor"] = plugin["plugin"]
                 continue
-            elif "metrics" in name.lower():
-                self.config["metrics"] = plugin["plugin"]
-                continue
+            # elif "metric" in name.lower():
+            #     self.config["metrics"] = plugin["plugin"]
+            #     continue
 
             # ToDo
             # Code to enforce order of modules
@@ -138,12 +138,33 @@ if __name__ == "__main__":
                 # "CommonVoicePreProcessor": {},
                 # "ASRBatchE2EModel": {},
                 "ASRBatchOffConfModel": {},
-                # "MUCSBatchOffConfScorer": {},
-                "LocustASRScorer": {}
+                "MUCSBatchOffConfScorer": {},
+                # "LocustASRScorer": {}
                 # "IndicSUPERBBatchOffConfScorer": {},
                 # "MUCSBatchE2EScorer": {}
                 # "CommonVoiceBatchE2EScorer": {},
                 # "WERMetric": {}
+
+                # NMT
+                # "WAT20Dataset": {},
+                # "WAT20PreProcessor": {
+                #     "preprocessor_config": {
+                #         "MODE": "indic-en"
+                #     }
+                # },
+                # "NMTModel": {},
+                # "WAT20NMTScorer": {},
+                # "BLEUMetric": {},
+
+                # "WMTDataset": {},
+                # "WMTPreProcessor": {
+                #     "preprocessor_config": {
+                #         "MODE": "indic-en"
+                #     }
+                # },
+                # "NMTModel": {},
+                # "WMTNMTScorer": {},
+                # "BLEUMetric": {},
             }
         }
     )
