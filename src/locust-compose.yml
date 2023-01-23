@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  master:
+    image: locust_test:latest
+    ports:
+     - "8089:8089"
+    volumes:
+      - /home/locust/app:/app
+    command: locust -f /app/src/locust_new.py --master -H http://api.dhruva.ai4bharat.org:8090 --model=ASRBatchOffConfModel --scorer=MUCSBatchOffConfScorer
+  
+  worker:
+    image: locust_test:latest
+    volumes:
+      - /home/locust/app:/app
+    command: locust -f /app/src/locust_new.py --worker --master-host master -H api.dhruva.ai4bharat.org:8090 --model=ASRBatchOffConfModel --scorer=MUCSBatchOffConfScorer
