@@ -1,0 +1,3 @@
+[submodule "src/config/schema"]
+	path = src/config/schema
+	url = https://github.com/AI4Bharat/Dhruva-Schema.git

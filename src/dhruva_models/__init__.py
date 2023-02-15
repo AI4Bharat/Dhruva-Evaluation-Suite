@@ -1,1 +1,1 @@
-from .dhruva_wrapper import DhruvaModel
+from .dhruva_api_wrapper import DhruvaModel

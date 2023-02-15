@@ -1,1 +1,1 @@
-from .dhruva_evaluator import DhruvaASREvaluator
+from .asr import DhruvaASREvaluator

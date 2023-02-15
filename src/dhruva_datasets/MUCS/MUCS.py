@@ -1,6 +1,7 @@
 import os
 import csv
 import json
+import base64
 import logging
 from pathlib import Path
 
@@ -18,7 +19,12 @@ def _load_wav(path: Path):
 
 def _load_raw(path: str):
     with open(path, "rb") as ip:
-        return ip.read()
+        # HF datasets don't have a bytes feature
+        # Sending bytes as string corrupts base64 conversion later
+        # Decoding utf-8 is throwing errors
+        # Sending it as a base64 string
+        # return base64.b64encode(ip.read()).decode("utf-8")
+        return ip.read()  # .decode("utf-8")
 
 
 class MUCSConfig(datasets.BuilderConfig):
@@ -57,23 +63,26 @@ class MUCS(datasets.GeneratorBasedBuilder):
         ),
     ]
 
-
     def _info(self):
-        features = {feature: datasets.Value("string") for feature in self.config.features}
+        # features = {feature: datasets.Value("string") for feature in self.config.features}
+        features = {}
         if self.config.language == "hi":
-            features["audio"] = datasets.Value("string")
+            # features["audio"] = datasets.Value("string")
             features["transcript"] = datasets.Value("string")
             features["language"] = datasets.Value("string")
+            features["audio"] = datasets.Audio(sampling_rate=16000),
 
         return datasets.DatasetInfo(
             description=_MUCS_DESCRIPTION + self.config.description,
             features=datasets.Features(features),
             homepage=self.config.url,
             citation=self.config.citation + "\n" + _MUCS_CITATION,
+            license="",
+            version="0.1.1"
         )
 
-
     def _split_generators(self, dl_manager: datasets.DownloadManager):
+        # Download mamager is iseful for downloading from ULCA / blob storage
         # dl_dir = dl_manager.download_and_extract(self.config.data_url) or ""
         base_path = "../Dhruva-Evaluation-Suite/datasets/raw/MUCS/"
         dl_dir = os.path.join(base_path, self.config.language)
@@ -83,21 +92,26 @@ class MUCS(datasets.GeneratorBasedBuilder):
                 gen_kwargs={
                     "transcript_file": "transcripts.csv",
                     "data_dir": dl_dir,
+                    "dl_manager": dl_manager,
                     "split": datasets.Split.TEST,
                 },
             ),
         ]
 
-    def _generate_examples(self, data_dir: str, transcript_file: str, split: str):
+    def _generate_examples(
+        self, data_dir: str, transcript_file: str, split: str, dl_manager: datasets.DownloadManager
+    ):
         if split != datasets.Split.TEST:
             logging.warn(f"{self.config.name} contains only Test split")
 
         with open(os.path.join(data_dir, transcript_file), encoding="utf-8") as f:
             raw_data = csv.reader(f, delimiter=",")
+            # Skip headers
             next(raw_data, None)
             for i, row in enumerate(raw_data):
                 yield i, {
-                    "audio": {"raw": _load_raw(os.path.join(data_dir, row[0])), "path": row[0]},
-                    "transcript": row[1],
-                    "language": self.config.language
-                }
+                        "audio": {"bytes": _load_raw(os.path.join(data_dir, row[0])), "path": row[0]},
+                        # "audio": _load_raw(os.path.join(data_dir, row[0])),
+                        "transcript": row[1],
+                        "language": self.config.language,
+                    }

@@ -1,81 +1,26 @@
-import os
-import json
-import tarfile
 import logging
-from pathlib import Path
-from typing import List, Any, Dict, Tuple
-
-from datasets import Dataset
-from tqdm import tqdm
-import numpy as np
-import soundfile as sf
-
-# import helpers
-# from plugins.preprocessors.speech_transcript_cleaning import cleaning_pipeline, get_dict_chars
+from evaluate import evaluator
+from datasets import load_dataset, Dataset
+from dhruva_datasets import MUCS
+from dhruva_models import DhruvaModel
+from dhruva_evaluators import DhruvaASREvaluator
 
 
-ULCAFormats = {
-    "ASR": {
-        # "headers": headers,
-        "payload": {
-            "audio": [
-                {
-                "audioContent": "string",
-                "audioUri": "string"
-                }
-            ],
-            "config": {
-                "language": {
-                    "sourceLanguage": "string"
-                    },
-                "audioFormat": "wav",
-                "encoding": "base64",
-                "samplingRate": 16000,
-                "postProcessors": [None]
-            }
-        }
-    },
-    "NMT": {
-        # "headers": headers,
-        "payload": { "text": "", "source_language": "", "target_language": "" }
-    }
-}
-
-
-
-
-# class DhruvaModel():
-#     def __init__(self, task: str, lang: str, **kwargs):
-#         self.task = task
-#         self.url =  "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat/conformer-hi-gpu--t4"
-#         self.payload = ULCAFormats.get(self.task)["payload"]
-#         self.payload["config"]["language"]["sourceLanguage"] = lang
-
-#     def __call__(self, batch_audio, **kwargs):
-#         import requests
-#         self.payload["audio"] = [{"audioContent": audio} for audio in batch_audio]
-#         results = requests.post(self.url, payload=json.dumps(self.payload)).json()
-#         return [{"generated_transcript": p["source"]} for p in results["output"]]
-
-
-
-if __name__ == "__main__":
-    from datasets import load_dataset, Audio, Dataset
-    from dhruva_models import DhruvaModel
-    from dhruva_evaluators import DhruvaASREvaluator
-    audio_path = "/Users/ashwin/ai4b/perf_testing/Dhruva-Evaluation-Suite/datasets/raw/MUCS/Hindi"
-    dataset = load_dataset("./dhruva_datasets/asr.py", "MUCS-hi", data_dir=audio_path, split="test")  # , streaming=True
-    print(dataset.column_names, dataset.shape, dir(dataset), isinstance(dataset, Dataset))
-    # print(dataset["audio"])
-    dataset = dataset[:10]
-
-    from evaluate import evaluator
-    from datasets import load_dataset
-    task_evaluator = evaluator("automatic-speech-recognition")
+def dhruva_evaluate(*args, **kwargs):
     url = "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat/conformer-hi-gpu--t4"
+
+    # mucs = load_dataset("./dhruva_datasets/MUCS", split="test")
+    task_evaluator = DhruvaASREvaluator()
     results = task_evaluator.compute(
-        model_or_pipeline=DhruvaModel(url=url, task="automatic-speech-recognition", lang="hi"),
-        data="./dhruva_datasets/asr.py",
+        model_or_pipeline=DhruvaModel(
+            url=url,
+            task="dhruva-asr",
+            input_column="audio",
+            language_column="language",
+            api_key="ae66a0b6-69de-4aaf-8fd1-aa07f8ec961b"
+        ),
+        data="./dhruva_datasets/MUCS/MUCS.py",
+        # data=mucs,
         subset="MUCS-hi",
         split="test",
         input_column="audio",
@@ -83,6 +28,18 @@ if __name__ == "__main__":
         metric="wer",
     )
     print("----> ", results)
+
+
+if __name__ == "__main__":
+    # audio_path = "/Users/ashwin/ai4b/perf_testing/Dhruva-Evaluation-Suite/datasets/raw/MUCS/Hindi"
+    # dataset = load_dataset("./dhruva_datasets/asr.py", "MUCS-hi", data_dir=audio_path, split="test")  # , streaming=True
+    # print(dataset.column_names, dataset.shape, isinstance(dataset, Dataset))
+    # print(dataset["audio"])
+    # dataset = dataset[:10]
+
+    
+    # task_evaluator = evaluator("automatic-speech-recognition")
+    dhruva_evaluate()
 
 
 # Load using custom script
