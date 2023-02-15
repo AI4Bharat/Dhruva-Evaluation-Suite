@@ -1,2 +1,0 @@
-from evaluator import EvaluatorBase, AccuracyEvaluator
-from locust_evaluator import LocustEvaluator

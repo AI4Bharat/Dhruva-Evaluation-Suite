@@ -133,4 +133,6 @@ datasets/preprocessed/*
 datasets/outputs/*
 *.jsonl
 *.tar*
+
+error_files/
 *.DS_Store
