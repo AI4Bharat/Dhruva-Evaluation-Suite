@@ -43,8 +43,8 @@ ULCATaskResponseSchemaMapping = {
 
 
 def _encode_audio(raw_input):
-    return base64.b64encode(raw_input).decode("utf-8")
-    # return raw_input
+    # return base64.b64encode(raw_input).decode("utf-8")
+    return raw_input
 
 
 def generate_asr_payload(batch_data, input_column, language_column):
