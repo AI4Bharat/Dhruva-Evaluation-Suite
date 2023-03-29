@@ -1,22 +1,25 @@
 [tool.poetry]
-name = "dhruva-evaluate"
+name = "dhruva-evaluation-suite"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "dhruva_evaluate"}]
+packages = [{include = "dhruva_evaluation_suite"}]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 tqdm = "^4.64.1"
 numpy = "1.23.5"
-soundfile = "^0.11.0"
+soundfile = "^0.12.0"
 jiwer = "2.5.1"
 pandas = "^1.5.3"
 indic-nlp-library = "^0.81"
 transformers = "^4.26.1"
 evaluate = {extras = ["evaluator"], version = "^0.4.0"}
 datasets = "^2.9.0"
+pydantic = {extras = ["email"], version = "^1.10.7"}
+pymongo = "^4.3.3"
+librosa = "^0.10.0.post2"
 
 
 [build-system]

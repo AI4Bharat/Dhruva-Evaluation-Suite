@@ -10,11 +10,11 @@ def dhruva_evaluate(*args, **kwargs):
     url = "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat/conformer-hi-gpu--t4"
 
     # mucs = load_dataset("./dhruva_datasets/mucs/mucs.py", data_dir="./dhruva_datasets/mucs/data")
-    task_evaluator = DhruvaASREvaluator()
+    task_evaluator = DhruvaASREvaluator(task="dhruva_asr", default_metric_name="wer")
     results = task_evaluator.compute(
         model_or_pipeline=DhruvaModel(
             url=url,
-            task="dhruva-asr",
+            task="dhruva_asr",
             input_column="audio",
             input_language_column="language",
             api_key="ae66a0b6-69de-4aaf-8fd1-aa07f8ec961b"

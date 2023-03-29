@@ -2,8 +2,8 @@ import os
 import csv
 import json
 import base64
+import pathlib
 import logging
-from pathlib import Path
 
 import datasets
 import soundfile as sf
@@ -13,9 +13,10 @@ from .release_stats import STATS
 
 _MUCS_CITATION = ""
 _MUCS_DESCRIPTION = ""
+_DATA_URL = "https://huggingface.co/datasets/ai4bharat/mucs-internal/resolve/main/data"
 
 
-def _load_wav(path: Path):
+def _load_wav(path: pathlib.Path):
     audio, _ = sf.read(path)
     return audio.tolist()
 
@@ -77,9 +78,10 @@ class MUCS(datasets.GeneratorBasedBuilder):
         features = {}
         # if self.config.language == "hi":
         # features["audio"] = datasets.Value("string")
+        features["path"] = datasets.Value("string")
         features["transcript"] = datasets.Value("string")
         features["language"] = datasets.Value("string")
-        features["audio"] = (datasets.Audio(sampling_rate=16000),)
+        features["audio"] = datasets.Audio(sampling_rate=16000)
 
         return datasets.DatasetInfo(
             description=_MUCS_DESCRIPTION + self.config.description,
@@ -91,32 +93,25 @@ class MUCS(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager: datasets.DownloadManager):
-        base_path = "./dhruva_datasets/MUCS/data/"
+        base_path = "data/"
         splits = {"test": datasets.Split.TEST}
+        audio_path = {}
+        metadata_path = {}
 
-        # Download mamager is useful for downloading from ULCA / blob storage
-        # archive_path = dl_manager.download()
-        archive_path = "./data/"
         for folder_name, split in splits.items():
-            archive_path = os.path.join(base_path, folder_name, f"{self.config.language}.tar.gz")
-            local_extracted_archive = dl_manager.extract(archive_path) if not dl_manager.is_streaming else None
+            audio_paths = f"{_DATA_URL}/{self.config.language}/audio_{split}.tar.gz"
+            audio_path[split] = dl_manager.download(audio_paths)
+            local_extracted_archive = dl_manager.extract(audio_path[split]) if not dl_manager.is_streaming else None
+            metadata_path[split] = f"{_DATA_URL}/{self.config.language}/data_{split}.json"
 
         return [
             datasets.SplitGenerator(
                 name=split,
                 gen_kwargs={
-                    "local_extracted_archive": os.path.join(
-                        base_path, folder_name, self.config.language
-                    ),
-                    "archive_iterator": dl_manager.iter_archive(
-                        os.path.join(base_path, folder_name, self.config.language + ".tar.gz")
-                    ),
-                    "metadata_filepath": os.path.join(
-                        base_path, folder_name, self.config.language, "transcripts.csv"
-                    ),
-                    "path_to_clips": os.path.join(
-                        base_path, folder_name, self.config.language
-                    ),
+                    "local_extracted_archive": local_extracted_archive,
+                    "archive_iterator": dl_manager.iter_archive(audio_path[split]),
+                    "metadata_filepath": metadata_path[split],
+                    "path_to_clips": self.config.language,
                 },
             )
             for folder_name, split in splits.items()
@@ -124,7 +119,7 @@ class MUCS(datasets.GeneratorBasedBuilder):
 
     def _generate_examples(
         self,
-        local_extracted_archive: str,
+        local_extracted_archive,
         archive_iterator: datasets.DownloadManager.iter_archive,
         metadata_filepath: str,
         path_to_clips: str,
@@ -133,48 +128,34 @@ class MUCS(datasets.GeneratorBasedBuilder):
         data_fields = list(self._info().features.keys())
         metadata = {}
         metadata_found = False
-        for path, f in archive_iterator:
-            if path == metadata_filepath:
-                metadata_found = True
-                lines = (line.decode("utf-8") for line in f)
-                reader = csv.DictReader(lines, delimiter=",", quoting=csv.QUOTE_NONE)
-                for row in reader:
-                    row["path"] = os.path.join(path_to_clips, row["path"])
-                    # if data is incomplete, fill with empty values
-                    for field in data_fields:
-                        if field not in row:
-                            row[field] = ""
-                    metadata[row["path"]] = row
-                break
+        with open(metadata_filepath, "r") as metadata_f:
+            meta = json.load(metadata_f)
+            for item in meta:
+                meta_item = {}
+                for field in data_fields:
+                    if field not in item:
+                        meta_item[field] = ""
+
+                meta_item["path"] = os.path.join(path_to_clips, item["audioFilename"])
+                metadata[meta_item["path"]] = meta_item
+                meta_item["transcript"] = item["text"]
+                meta_item["language"] = self.config.language
+            metadata_found = True
 
         for path, f in archive_iterator:
-            if path.startswith(path_to_clips):
+            rel_path = os.path.join(*pathlib.Path(path).parts[-2:])
+            if rel_path.startswith(path_to_clips):
                 assert metadata_found, "Found audio clips before the metadata CSV file."
                 if not metadata:
                     break
                 if path in metadata:
-                    result = dict(metadata[path])
+                    result = dict(metadata[rel_path])
                     # set the audio feature and the path to the extracted file
                     path = (
-                        os.path.join(local_extracted_archive, path)
+                        os.path.join(local_extracted_archive, rel_path)
                         if local_extracted_archive
                         else path
                     )
+
                     result["audio"] = {"path": path, "bytes": f.read()}
-                    result["transcript"] = metadata["transcript"]
-                    # set path to None if the audio file doesn't exist locally (i.e. in streaming mode)
-                    result["path"] = path if local_extracted_archive else None
-
                     yield path, result
-
-        # with open(os.path.join(data_dir, transcript_file), encoding="utf-8") as f:
-        #     raw_data = csv.reader(f, delimiter=",")
-        #     # Skip headers
-        #     next(raw_data, None)
-        #     for i, row in enumerate(raw_data):
-        #         yield i, {
-        #                 # "audio": {"bytes": _load_raw(os.path.join(data_dir, row[0])), "path": row[0]},
-        #                 "audio": _load_raw(os.path.join(data_dir, row[0])),
-        #                 "transcript": row[1],
-        #                 "language": self.config.language,
-        #             }

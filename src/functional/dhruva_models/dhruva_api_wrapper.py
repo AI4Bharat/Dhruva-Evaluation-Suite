@@ -7,22 +7,19 @@ from typing import List
 import multiprocessing as mp
 
 from tqdm import tqdm
-from config.schema.services.request import (
-    ULCAAsrInferenceRequest,
-    ULCATtsInferenceRequest,
-    ULCANerInferenceRequest,
-    ULCATranslationInferenceRequest
-)
+from schema.services.request.ulca_asr_inference_request import ULCAAsrInferenceRequest
+from schema.services.request.ulca_tts_inference_request import ULCATtsInferenceRequest
+from schema.services.request.ulca_ner_inference_request import ULCANerInferenceRequest
+from schema.services.request.ulca_translation_inference_request import ULCATranslationInferenceRequest
 
-from config.schema.services.response import (
-    ULCAAsrInferenceResponse,
-    ULCATtsInferenceResponse,
-    ULCANerInferenceResponse,
-    ULCATranslationInferenceResponse
-)
+
+from schema.services.response.ulca_asr_inference_response import ULCAAsrInferenceResponse
+from schema.services.response.ulca_tts_inference_response import ULCATtsInferenceResponse
+from schema.services.response.ulca_ner_inference_response import ULCANerInferenceResponse
+from schema.services.response.ulca_translation_inference_response import ULCATranslationInferenceResponse
 # from transformers.pipeline import Pipeline
 
-BATCH_LEN = 5
+BATCH_LEN = 1
 ASR_TASK = "dhruva_asr"
 
 
@@ -43,20 +40,21 @@ ULCATaskResponseSchemaMapping = {
 
 
 def _encode_audio(raw_input):
-    # return base64.b64encode(raw_input).decode("utf-8")
-    return raw_input
+    return base64.b64encode(raw_input).decode("utf-8")
+    # return raw_input
 
 
 def generate_asr_payload(batch_data, input_column, language_column):
-    payload = ULCATaskRequestSchemaMapping.get(ASR_TASK)
-    payload.config.language.sourceLanguage = batch_data[0][language_column]
-    payload.audio = [{"audioContent": _encode_audio(data[input_column])} for data in batch_data]
-    return payload
+    payload = {"config": {"language": {}, "audioFormat": "wav", "samplingRate": 16000, "postProcessors": []}}
+    payload["config"]["language"]["sourceLanguage"] = batch_data[0][language_column]
+    payload["audio"] = [{"audioContent": _encode_audio(data[input_column]["array"])} for data in batch_data]
+    payload = ULCATaskRequestSchemaMapping.get(ASR_TASK)(**payload)
+    return payload.dict()
 
 
 def parse_asr_response(response):
     payload = ULCATaskResponseSchemaMapping.get(ASR_TASK)(response)
-    return [{"text": p.source} for p in payload.output]
+    return [{"text": p["source"]} for p in payload["output"]]
 
 
 class DhruvaModel():
@@ -75,7 +73,8 @@ class DhruvaModel():
         if self.payload is None:
             raise ValueError("Empty payload")
 
-        results = requests.post(self.url, data=json.dumps(self.payload), headers=self.headers).json()
+        results = requests.post(self.url, data=json.dumps(self.payload), headers=self.headers).text  # .json()
+        print("results: ", results)
 
         parsed_results = None
         if self.task == ASR_TASK:
@@ -92,6 +91,7 @@ class DhruvaModel():
         for data in tqdm(all_data):
             batch_data.append(data)
             if len(batch_data) == BATCH_LEN:
+                print("len: ", len(batch_data))
                 all_results.extend(self._infer(batch_data))
                 batch_data = []
 
@@ -105,7 +105,7 @@ class DhruvaModel():
         # Write to pyarrow files from each process
         # collate responses from all files and stream / return
 
-        num_processes = mp.cpu_count()
+        num_processes =  1  # mp.cpu_count()
         with mp.Pool(processes=num_processes) as pool:
             results = pool.map(
                 self.infer_batch,
