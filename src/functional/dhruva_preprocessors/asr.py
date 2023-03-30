@@ -6,4 +6,6 @@ def clean_and_normalize_transcripts(raw_data):
     no_ood, preprocessed_sentence = cleaning_pipeline(
         dict_characters, raw_data["transcript"], raw_data["language"]
     )
-    return {"audio": raw_data["audio"], "transcript": preprocessed_sentence, "language": raw_data["language"]}
+    raw_data["transcript"] = preprocessed_sentence
+    return raw_data
+    # return {"audio": raw_data["audio"], "transcript": preprocessed_sentence, "language": raw_data["language"]}

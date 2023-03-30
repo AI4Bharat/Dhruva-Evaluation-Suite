@@ -1,7 +1,7 @@
 import logging
-from evaluate import evaluator
-from datasets import load_dataset, Dataset
-from dhruva_datasets import mucs_dataset
+# from evaluate import evaluator
+# from datasets import load_dataset, Dataset
+# from dhruva_datasets import mucs_dataset
 from dhruva_models import DhruvaModel
 from dhruva_evaluators import DhruvaASREvaluator
 
@@ -19,8 +19,8 @@ def dhruva_evaluate(*args, **kwargs):
             input_language_column="language",
             api_key="ae66a0b6-69de-4aaf-8fd1-aa07f8ec961b"
         ),
-        data="./dhruva_datasets/MUCS/MUCS.py",
-        # data=MUCS,
+        # data="./dhruva_datasets/MUCS/MUCS.py",
+        data="ai4bharat/MUCS-internal",
         subset="hi",
         split="test",
         input_column="audio",

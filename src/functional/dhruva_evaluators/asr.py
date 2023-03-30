@@ -1,15 +1,16 @@
 import os
-import json
-import tarfile
-import logging
-from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Union, Literal
+# import json
+# import tarfile
+# import logging
+# from pathlib import Path
+# from typing import Any, Callable, Dict, Optional, Tuple, Union, Literal
 
-from tqdm import tqdm
-import numpy as np
-import soundfile as sf
-from numbers import Number
+# from tqdm import tqdm
+# import numpy as np
+# import soundfile as sf
+# from numbers import Number
 
+import multiprocessing as mp
 from datasets import Dataset
 from evaluate import Evaluator, EvaluationModule
 
@@ -61,7 +62,7 @@ class DhruvaASREvaluator(Evaluator):
 
         self.check_required_columns(data, {"input_column": input_column, "label_column": label_column})
         # preprocess data based on language
-        data = data.map(clean_and_normalize_transcripts)
+        data = data.map(clean_and_normalize_transcripts, load_from_cache_file=False, disable_nullable=True)  # , num_proc=mp.cpu_count())
         # concatenate_texts is for WER score to be calculated for the whole dataset
         return {"references": data[label_column], "concatenate_texts": True}, data
 

@@ -1,12 +1,9 @@
 import os
-import csv
 import json
-import base64
 import pathlib
 import logging
 
 import datasets
-import soundfile as sf
 
 from .languages import LANGUAGES
 from .release_stats import STATS
@@ -14,21 +11,6 @@ from .release_stats import STATS
 _MUCS_CITATION = ""
 _MUCS_DESCRIPTION = ""
 _DATA_URL = "https://huggingface.co/datasets/ai4bharat/mucs-internal/resolve/main/data"
-
-
-def _load_wav(path: pathlib.Path):
-    audio, _ = sf.read(path)
-    return audio.tolist()
-
-
-def _load_raw(path: str):
-    with open(path, "rb") as ip:
-        # HF datasets don't have a bytes feature
-        # Sending bytes as string corrupts base64 conversion later
-        # Decoding utf-8 is throwing errors
-        # Sending it as a base64 string
-        return base64.b64encode(ip.read()).decode("utf-8")
-        # return ip.read()  # .decode("utf-8")
 
 
 class MUCSConfig(datasets.BuilderConfig):
@@ -65,7 +47,6 @@ class MUCS(datasets.GeneratorBasedBuilder):
             version=STATS["version"],
             language=lang,
             description=_MUCS_DESCRIPTION,
-            # features=["audio", "transcript"],
             data_url="",
             citation=_MUCS_CITATION,
             url="",
@@ -74,10 +55,7 @@ class MUCS(datasets.GeneratorBasedBuilder):
     ]
 
     def _info(self):
-        # features = {feature: datasets.Value("string") for feature in self.config.features}
         features = {}
-        # if self.config.language == "hi":
-        # features["audio"] = datasets.Value("string")
         features["path"] = datasets.Value("string")
         features["transcript"] = datasets.Value("string")
         features["language"] = datasets.Value("string")
@@ -93,12 +71,11 @@ class MUCS(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager: datasets.DownloadManager):
-        base_path = "data/"
         splits = {"test": datasets.Split.TEST}
         audio_path = {}
         metadata_path = {}
 
-        for folder_name, split in splits.items():
+        for _, split in splits.items():
             audio_paths = f"{_DATA_URL}/{self.config.language}/audio_{split}.tar.gz"
             audio_path[split] = dl_manager.download(audio_paths)
             local_extracted_archive = dl_manager.extract(audio_path[split]) if not dl_manager.is_streaming else None
@@ -114,7 +91,7 @@ class MUCS(datasets.GeneratorBasedBuilder):
                     "path_to_clips": self.config.language,
                 },
             )
-            for folder_name, split in splits.items()
+            for _, split in splits.items()
         ]
 
     def _generate_examples(
@@ -127,7 +104,7 @@ class MUCS(datasets.GeneratorBasedBuilder):
         """ Generate data """
         data_fields = list(self._info().features.keys())
         metadata = {}
-        metadata_found = False
+
         with open(metadata_filepath, "r") as metadata_f:
             meta = json.load(metadata_f)
             for item in meta:
@@ -137,15 +114,13 @@ class MUCS(datasets.GeneratorBasedBuilder):
                         meta_item[field] = ""
 
                 meta_item["path"] = os.path.join(path_to_clips, item["audioFilename"])
-                metadata[meta_item["path"]] = meta_item
                 meta_item["transcript"] = item["text"]
                 meta_item["language"] = self.config.language
-            metadata_found = True
+                metadata[meta_item["path"]] = meta_item
 
         for path, f in archive_iterator:
             rel_path = os.path.join(*pathlib.Path(path).parts[-2:])
             if rel_path.startswith(path_to_clips):
-                assert metadata_found, "Found audio clips before the metadata CSV file."
                 if not metadata:
                     break
                 if path in metadata:
