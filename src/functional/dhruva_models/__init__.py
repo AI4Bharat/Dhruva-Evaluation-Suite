@@ -1,1 +1,2 @@
-from .dhruva_api_wrapper import DhruvaModel
+from .dhruva_rest_api_wrapper import DhruvaRESTModel
+from .dhruva_socket_api_wrapper import DhruvaSocketModel

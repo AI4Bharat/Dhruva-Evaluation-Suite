@@ -8,6 +8,7 @@ import multiprocessing as mp
 
 import datasets
 from tqdm import tqdm
+from constants import Enums
 from schema.services.request.ulca_asr_inference_request import ULCAAsrInferenceRequest
 from schema.services.request.ulca_tts_inference_request import ULCATtsInferenceRequest
 from schema.services.request.ulca_ner_inference_request import ULCANerInferenceRequest
@@ -29,24 +30,21 @@ from schema.services.response.ulca_translation_inference_response import (
     ULCATranslationInferenceResponse,
 )
 
-# from transformers.pipeline import Pipeline
-
 BATCH_LEN = 5
-ASR_TASK = "dhruva_asr"
 
 
 ULCATaskRequestSchemaMapping = {
-    "dhruva_asr": ULCAAsrInferenceRequest,
-    "dhruva_tts": ULCATtsInferenceRequest,
-    "dhruva_ner": ULCANerInferenceRequest,
-    "dhruva_nmt": ULCATranslationInferenceRequest,
+    Enums.tasks.ASR: ULCAAsrInferenceRequest,
+    Enums.tasks.TTS: ULCATtsInferenceRequest,
+    Enums.tasks.NER: ULCANerInferenceRequest,
+    Enums.tasks.NMT: ULCATranslationInferenceRequest,
 }
 
 ULCATaskResponseSchemaMapping = {
-    "dhruva_asr": ULCAAsrInferenceResponse,
-    "dhruva_tts": ULCATtsInferenceResponse,
-    "dhruva_ner": ULCANerInferenceResponse,
-    "dhruva_nmt": ULCATranslationInferenceResponse,
+    Enums.tasks.ASR: ULCAAsrInferenceResponse,
+    Enums.tasks.TTS: ULCATtsInferenceResponse,
+    Enums.tasks.NER: ULCANerInferenceResponse,
+    Enums.tasks.NMT: ULCATranslationInferenceResponse,
 }
 
 feature = datasets.Audio()
@@ -54,10 +52,9 @@ feature = datasets.Audio()
 def _encode_audio(raw_input):
     data = feature.encode_example(raw_input)
     return base64.b64encode(data["bytes"]).decode("utf-8")
-    # return raw_input
 
 
-def generate_asr_payload(batch_data, input_column, language_column):
+def generate_asr_payload(batch_data: list, input_column: str, language_column: str):
     payload = {
         "config": {
             "language": {},
@@ -71,52 +68,68 @@ def generate_asr_payload(batch_data, input_column, language_column):
         {"audioContent": _encode_audio(data[input_column])}
         for data in batch_data
     ]
-    payload = ULCATaskRequestSchemaMapping.get(ASR_TASK)(**payload)
+    payload = ULCAAsrInferenceRequest(**payload)
     return payload.dict()
 
 
-def parse_asr_response(response):
-    payload = ULCATaskResponseSchemaMapping.get(ASR_TASK)(**response)
+def parse_asr_response(response: dict):
+    payload = ULCAAsrInferenceResponse(**response)
     return [{"text": p.source} for p in payload.output]
 
 
-class DhruvaModel:
+def generate_nmt_payload(batch_data: list, input_column: str):
+    payload = {
+        "config": {
+            "language": {
+                "sourceLanguage": batch_data[0]["source_language"],
+                "sourceScriptCode": "",
+                "targetLanguage": batch_data[0]["target_language"],
+                "targetScriptCode": ""
+            },
+            "postProcessors": [],
+        }
+    }
+    payload["input"] = [{"source": data[input_column]} for data in batch_data]
+    payload = ULCATranslationInferenceRequest(**payload)
+    return payload.dict()
+
+
+def parse_nmt_response(response: dict):
+    payload = ULCATranslationInferenceResponse(**response)
+    return [{"text": p.target} for p in payload.output]
+
+
+class DhruvaRESTModel:
     def __init__(
         self,
         task: str,
         url: str,
-        input_language_column: str,
+        # input_language_column: str,
         input_column: str,
         api_key: str,
-        output_language_column: str = "",
         **kwargs
     ):
         self.task = task
         self.url = url
-        self.input_language_column = input_language_column
+        self.input_language_column = kwargs.get("input_language_column")
         self.input_column = input_column
         self.headers = {"Authorization": api_key}
 
     def _infer(self, batch_data: List):
-        self.payload = None
-        if self.task == ASR_TASK:
-            self.payload = generate_asr_payload(
-                batch_data, self.input_column, self.input_language_column
-            )
+        try:
+            self.payload = globals()[f"generate_{self.task}_payload"](batch_data, self.input_column)
+            if self.payload is None:
+                raise ValueError("Empty payload")
 
-        if self.payload is None:
-            raise ValueError("Empty payload")
+            results = requests.post(
+                self.url, data=json.dumps(self.payload), headers=self.headers, timeout=30
+            ).json()
 
-        # print("self.url: ", self.url)
-        # print("self.payload: ", self.payload)
-        results = requests.post(
-            self.url, data=json.dumps(self.payload), headers=self.headers
-        ).json()
-        # print("results: ", results)
+            parsed_results = globals()[f"parse_{self.task}_response"](results)
 
-        parsed_results = None
-        if self.task == ASR_TASK:
-            parsed_results = parse_asr_response(results)
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc(e))
 
         return parsed_results
 
@@ -127,13 +140,19 @@ class DhruvaModel:
         # .cache/huggingface/
         # Later, write all outputs to some file
         for data in tqdm(all_data):
+            # print(data)
             batch_data.append(data)
             if len(batch_data) == BATCH_LEN:
-                all_results.extend(self._infer(batch_data))
-                batch_data = []
+                results = self._infer(batch_data)
+                if results is not None:
+                    all_results.extend(results)
+                    batch_data = []
+                else :
+                    print(data["path"])
 
         if batch_data:
-            all_results.extend(self._infer(batch_data))
+            results = self._infer(batch_data)
+            all_results.extend(results)
         return all_results
 
     def __call__(self, all_audios, **kwargs):

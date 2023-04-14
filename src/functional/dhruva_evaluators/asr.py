@@ -43,7 +43,7 @@ class DhruvaASREvaluator(Evaluator):
     Methods in this class assume a data format compatible with Dhruva.
     """
 
-    def __init__(self, task="dhruva-asr", default_metric_name="wer"):
+    def __init__(self, dataset_name: str, task="dhruva-asr", default_metric_name="wer"):
         super().__init__(task, default_metric_name=default_metric_name)
 
     def prepare_data(self, data: Dataset, input_column: str, label_column: str, *args, **kwargs):
