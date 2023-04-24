@@ -1,4 +1,5 @@
 import os
+import csv
 import json
 import pathlib
 import logging
@@ -74,18 +75,19 @@ class MUCS(datasets.GeneratorBasedBuilder):
         splits = {"test": datasets.Split.TEST}
         audio_path = {}
         metadata_path = {}
+        local_extracted_archive = {}
 
         for _, split in splits.items():
             audio_paths = f"{_DATA_URL}/{self.config.language}/audio_{split}.tar.gz"
             audio_path[split] = dl_manager.download(audio_paths)
-            local_extracted_archive = dl_manager.extract(audio_path[split]) if not dl_manager.is_streaming else None
-            metadata_path[split] = f"{_DATA_URL}/{self.config.language}/data_{split}.json"
+            local_extracted_archive[split] = dl_manager.extract(audio_path[split]) if not dl_manager.is_streaming else None
+            metadata_path[split] = dl_manager.download_and_extract(f"{_DATA_URL}/{self.config.language}/transcripts_{split}.csv")
 
         return [
             datasets.SplitGenerator(
                 name=split,
                 gen_kwargs={
-                    "local_extracted_archive": local_extracted_archive,
+                    "local_extracted_archive": local_extracted_archive[split],
                     "archive_iterator": dl_manager.iter_archive(audio_path[split]),
                     "metadata_filepath": metadata_path[split],
                     "path_to_clips": self.config.language,
@@ -106,15 +108,17 @@ class MUCS(datasets.GeneratorBasedBuilder):
         metadata = {}
 
         with open(metadata_filepath, "r") as metadata_f:
-            meta = json.load(metadata_f)
-            for item in meta:
+            reader = csv.DictReader(metadata_f)
+            for item in reader:
+            # for item in meta:
                 meta_item = {}
                 for field in data_fields:
                     if field not in item:
                         meta_item[field] = ""
 
-                meta_item["path"] = os.path.join(path_to_clips, item["audioFilename"])
-                meta_item["transcript"] = item["text"]
+                # meta_item["path"] = os.path.join(path_to_clips, item["audioFilename"])
+                meta_item["path"] = os.path.join(path_to_clips, item["path"])
+                meta_item["transcript"] = item["transcript"]
                 meta_item["language"] = self.config.language
                 metadata[meta_item["path"]] = meta_item
 

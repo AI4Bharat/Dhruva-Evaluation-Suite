@@ -1,5 +1,6 @@
+from typing import Union
 import multiprocessing as mp
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 from evaluate import Evaluator, EvaluationModule, TranslationEvaluator
 
 from constants import Enums, DATASET_INPUT_COLUMN_MAPPING

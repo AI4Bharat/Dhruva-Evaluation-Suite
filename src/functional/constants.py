@@ -37,6 +37,7 @@ class _ModelTypesEnum(BaseModel):
 class _DatasetsEnum(BaseModel):
     FLORES: str = "facebook/flores"
     MUCS: str = "ai4bharat/MUCS-internal"
+    IndicSUPERB: str = "ai4bharat/IndicSUPERB-internal"
 
 class _Enums(BaseModel):
     tasks: _TasksEnum = _TasksEnum()
@@ -64,7 +65,10 @@ class _Dataset(BaseModel):
     path: str
     source_language: Optional[Union[list[str], str]]
     target_language: Optional[Union[list[str], str]]
+    input_column: Optional[Union[list[str], str]]
+    label_column: Optional[Union[list[str], str]]
     split: str
+    subset: Optional[Union[list[str], str]]
     # subset: ""
     # class Config:
     #     extra = Extra.allow
@@ -75,6 +79,7 @@ class UserConfiguration(PydanticBaseSettings):
     model: _Model
     task: _Task
     dataset: Union[list[_Dataset], _Dataset]
+    results_folder: str = "./results"
 
     class Config:
         config_files = [Path("test-nmt.yml")]

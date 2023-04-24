@@ -1,28 +1,20 @@
-import json
-import base64
+import time
 import logging
-from typing import List
 
 import socketio
 import datasets
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
-from pydub import AudioSegment
 
 BATCH_LEN = 5
-
-
 feature = datasets.Audio()
 
 
-def _encode_audio(raw_input):
-    data = feature.encode_example(raw_input)
-    return base64.b64encode(data["bytes"]).decode("utf-8")
-
-
-def generate_asr_payload():
+def generate_asr_task_sequence():
     return [
         {
-            "task": {"type": "asr"},
+            "taskType": "asr",
             "config": {
                 "language": {"sourceLanguage": "en"},
                 "samplingRate": 16000,
@@ -36,12 +28,10 @@ def generate_asr_payload():
 
 
 def parse_asr_response(response: dict):
-    print("response: ", response)
-    # payload = ULCAAsrInferenceResponse(**response)
-    # return [{"text": p.source} for p in payload.output]
+    return [{"text": p["source"]} for resp in response["pipelineResponse"] for p in resp["output"]]
 
 
-def generate_nmt_payload(batch_data: list, input_column: str):
+def generate_nmt_task_sequence(batch_data: list, input_column: str):
     payload = {
         "config": {
             "language": {
@@ -85,11 +75,11 @@ class DhruvaStreamingClient:
 
         # states
         self.audio_stream = None
-        self.is_speaking = False
-        self.is_stream_inactive = True
+        self.is_speaking = True
+        self.is_stream_inactive = False
 
         self.socket_client = self._get_client(
-            on_ready=None
+            on_ready=False
         )
 
         self.socket_client.connect(
@@ -99,43 +89,42 @@ class DhruvaStreamingClient:
         )
 
     def response_handler(self, response):
-        output_task = None
-        for task in self.task_sequence:
-            output_task = task["name"]
+        task = ""
+        for t in self.task_sequence:
+            task = t["taskType"]
 
-        if output_task == "asr":
-            self.parsed_response = parse_asr_response(response)
-        elif output_task == "nmt":
-            self.parsed_response = parse_nmt_response(response)
+        self.parsed_response = globals()[f"parse_{task}_response"](response)
+        print("\n\n------\nfinal response: ", self.parsed_response, "\n----------\n")
 
     def _get_client(self, on_ready=None) -> socketio.Client:
         sio = socketio.Client(reconnection_attempts=5)
 
         @sio.event
         def connect():
-            print("Socket connected with ID:", sio.get_sid())
+            print("Socket connected with ID:", sio.get_sid(), self.task_sequence)
             sio.emit("start", data=(self.task_sequence))
 
         @sio.event
         def connect_error(data):
             print("The connection failed!")
 
-        @sio.on("ready")
+        # @sio.on("ready")
+        @sio.on("connect-success")
         def ready():
             self.is_stream_inactive = False
-            # print("Server ready to receive data from client")
+            print("Server ready to receive data from client")
             if on_ready:
                 on_ready()
 
         @sio.on("response")
         def response(response):
-            print(response)
-            print()
+            # print("response: ", response)
             if self.is_stream_inactive:
                 self.response_handler(response)
 
         @sio.on("terminate")
         def terminate():
+            print("terminate")
             sio.disconnect()
 
         @sio.event
@@ -159,28 +148,24 @@ class DhruvaStreamingClient:
         pass
 
     def send_file(self, data):
-        # cut the file into 2 sec chunks amd emit every chunk
-        print("audio_data: ", data)
-        data = feature.encode_example(data)
-
-        segment = AudioSegment(data["bytes"], sample_width=2, frame_rate=16000, channels=1)
-        duration = segment.duration_seconds
         stream_duration = 2
+        frequency = 16000
 
-        for i in range(0, duration, stream_duration):
-            t1 = i * 1000 # Works in milliseconds
-            t2 = i * 1000 + stream_duration * 1000
-            chunk = segment[t1:t2]
-            print("chunk array: ", chunk)
-            chunk = feature.encode_example(chunk)
-            print("chunk: ", chunk)
+        slices = np.arange(0, len(data["audio"]["array"])/16000, stream_duration, dtype=np.int)
+
+        for start, end in zip(slices[:-1], slices[1:]):
+            start_audio = start * frequency
+            end_audio = end * frequency
+            audio_slice = data["audio"]["array"][int(start_audio): int(end_audio)]
+            chunk = feature.encode_example({
+                "array": audio_slice, "path": data["audio"]["path"], "sampling_rate": frequency})
 
             clear_server_state = not self.is_speaking
             streaming_config = {
                 "response_depth": self.task_sequence__intermediate_response_depth
             }
-            data = base64.b64encode(chunk["bytes"]).decode("utf-8")
-            input_data = {"audio": [{"audioContent": data}]}
+            input_data = {"audio": [{"audioContent": chunk["bytes"]}]}
+
             self.socket_client.emit(
                 "data",
                 data=(
@@ -190,7 +175,13 @@ class DhruvaStreamingClient:
                     self.is_stream_inactive,
                 ),
             )
+            # print("before wait")
+            # self.socket_client.wait()
+            # print("after wait")
+            time.sleep(2)
+
         self._transmit_end_of_stream()
+        time.sleep(2)
 
     def _transmit_end_of_stream(self) -> None:
         # Convey that speaking has stopped
@@ -203,6 +194,7 @@ class DhruvaStreamingClient:
         self.socket_client.emit(
             "data", (None, None, clear_server_state, self.is_stream_inactive)
         )
+        print("Terminated")
 
 
 class DhruvaSocketModel:
@@ -221,24 +213,29 @@ class DhruvaSocketModel:
         self.api_key = api_key
 
     def _infer(self, data):
-        try:
-            streamer = DhruvaStreamingClient(
-                socket_url=self.url,
-                api_key=self.api_key,
-                task_sequence=globals()[f"generate_{self.task}_task_sequence"](),
-                auto_start=False,
-            )
-            print("sid: ", streamer.socket_client.get_sid())
-            streamer.send_file(data)
-
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc(e))
+        streamer = DhruvaStreamingClient(
+            socket_url=self.url,
+            api_key=self.api_key,
+            task_sequence=globals()[f"generate_{self.task}_task_sequence"](),
+            auto_start=False,
+        )
+        streamer.send_file(data)
+        while True:
+            if not hasattr(streamer, "parsed_response"):
+                time.sleep(1)
+                continue
+            break
 
         return streamer.parsed_response
 
     def __call__(self, all_audios, **kwargs):
         all_results = []
+        errors = []
         for audio in tqdm(all_audios):
-            self._infer(audio)
+            try:
+                self._infer(audio)
+            except Exception:
+                errors.append(audio["audio"]["path"])
+
+        pd.DataFrame(errors).to_csv("errors.csv")
         return all_results

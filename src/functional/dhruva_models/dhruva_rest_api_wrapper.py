@@ -129,7 +129,7 @@ class DhruvaRESTModel:
 
         except Exception as e:
             import traceback
-            print(traceback.format_exc(e))
+            print(traceback.print_exc(e))
 
         return parsed_results
 
