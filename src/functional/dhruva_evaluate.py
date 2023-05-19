@@ -102,10 +102,6 @@ class Evaluation:
         self.subset = self.find_data_subset(dataset_source_lang, dataset_target_lang)
 
     def run(self, dataset_path, dataset_name, split):
-        # aks = load_dataset("ai4bharat/Aksharantar", self.subset, split=split, streaming=True)
-        # print(next(iter(aks)))
-        # print(aks)
-
         self.task_evaluator = self.task_evaluator_obj(
             dataset_name=dataset_name,
             task=self.user_config.task.type,
@@ -114,12 +110,12 @@ class Evaluation:
         results = self.task_evaluator.compute(
             model_or_pipeline=self.model(
                 url=self.user_config.model.url,
+                service_id=self.user_config.model.service_id,
                 task=self.user_config.task.type,
                 input_column=self.input_column,
                 api_key=EnvSettings.api_key,
             ),
-            data=dataset_path,  # or dataset path
-            # data=aks,
+            data=dataset_path,
             subset=self.subset,
             split=split,
             input_column=self.input_column,
@@ -245,33 +241,6 @@ class EvaluationSuite:
     def run(self):
         if isinstance(self.user_config.dataset, list):
             self.run_datasets()
-            # for dataset in self.user_config.dataset:
-            #     logger.info(f"Dataset: {dataset}")
-            #     if isinstance(dataset.source_language, list):
-            #         for slang, tlang in zip(
-            #             dataset.source_language, dataset.target_language
-            #         ):
-            #             logger.info(
-            #                 f"Source Language:{slang} \tTarget Language: {tlang}"
-            #             )
-            #             self.evaluator.initialise_dataset_params(
-            #                 slang, tlang, dataset.name, dataset.input_column, dataset.label_column, dataset.subset
-            #             )
-            #             self.evaluator.run(dataset.path, dataset.name, dataset.split)
-            #     else:
-            #         logger.info(
-            #             f"Source Language:{dataset.source_language} \
-            #                      \tTarget Language: {dataset.target_language}"
-            #         )
-            #         self.evaluator.initialise_dataset_params(
-            #             dataset.source_language,
-            #             dataset.target_language,
-            #             dataset.name,
-            #             dataset.input_column,
-            #             dataset.label_column,
-            #             dataset.subset
-            #         )
-            #         self.evaluator.run(dataset.path, dataset.name, dataset.split)
 
         elif isinstance(self.user_config.dataset.source_language, list):
             self.loop_langs(
@@ -284,24 +253,7 @@ class EvaluationSuite:
                 self.user_config.dataset.label_column,
                 self.user_config.dataset.subset
             )
-            # for slang, tlang in zip(
-            #     self.user_config.dataset.source_language,
-            #     self.user_config.dataset.target_language,
-            # ):
-            #     logger.info(f"Source Language:{slang} \tTarget Language: {tlang}")
-            #     self.evaluator.initialise_dataset_params(
-            #         slang,
-            #         tlang,
-            #         self.user_config.dataset.name,
-            #         self.user_config.dataset.input_column,
-            #         self.user_config.dataset.label_column,
-            #         self.user_config.dataset.subset,
-            #     )
-            #     self.evaluator.run(
-            #         self.user_config.dataset.path,
-            #         self.user_config.dataset.name,
-            #         self.user_config.dataset.split,
-            #     )
+
         else:
             self._run(
                 self.user_config.dataset.source_language,
@@ -313,23 +265,6 @@ class EvaluationSuite:
                 self.user_config.dataset.label_column,
                 self.user_config.dataset.subset,
             )
-            # logger.info(
-            #     f"Source Language:{self.user_config.dataset.source_language} \
-            #                      \tTarget Language: {self.user_config.dataset.target_language}"
-            # )
-            # self.evaluator.initialise_dataset_params(
-            #     self.user_config.dataset.source_language,
-            #     self.user_config.dataset.target_language,
-            #     self.user_config.dataset.name,
-            #     self.user_config.dataset.input_column,
-            #     self.user_config.dataset.label_column,
-            #     self.user_config.dataset.subset,
-            # )
-            # self.evaluator.run(
-            #     self.user_config.dataset.path,
-            #     self.user_config.dataset.name,
-            #     self.user_config.dataset.split,
-            # )
 
 
 if __name__ == "__main__":

@@ -2,7 +2,6 @@ import time
 import gevent
 import socketio
 from urllib.parse import urlencode
-from locust import User, task, between, events
 
 NUM_ALLOWED_HITS = 3
 
