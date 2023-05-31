@@ -8,12 +8,19 @@ import multiprocessing as mp
 
 import datasets
 from tqdm import tqdm
-from constants import Enums
+from constants import (
+    Enums,
+    ULCA_LANGUAGE_CODE_TO_AKSHARANTAR_MAPPING,
+    AKSHARANTAR_TO_ULCA_LANGUAGE_CODE_MAPPING,
+)
 from schema.services.request.ulca_asr_inference_request import ULCAAsrInferenceRequest
 from schema.services.request.ulca_tts_inference_request import ULCATtsInferenceRequest
 from schema.services.request.ulca_ner_inference_request import ULCANerInferenceRequest
 from schema.services.request.ulca_translation_inference_request import (
     ULCATranslationInferenceRequest,
+)
+from schema.services.request.ulca_transliteration_inference_request import (
+    ULCATransliterationInferenceRequest
 )
 
 
@@ -29,7 +36,9 @@ from schema.services.response.ulca_ner_inference_response import (
 from schema.services.response.ulca_translation_inference_response import (
     ULCATranslationInferenceResponse,
 )
-
+from schema.services.response.ulca_transliteration_inference_response import (
+    ULCATransliterationInferenceResponse
+)
 BATCH_LEN = 5
 
 
@@ -54,7 +63,7 @@ def _encode_audio(raw_input):
     return base64.b64encode(data["bytes"]).decode("utf-8")
 
 
-def generate_asr_payload(batch_data: list, input_column: str, language_column: str):
+def generate_asr_payload(batch_data: list, input_column: str):
     payload = {
         "config": {
             "language": {},
@@ -63,9 +72,12 @@ def generate_asr_payload(batch_data: list, input_column: str, language_column: s
             "postProcessors": [],
         }
     }
-    payload["config"]["language"]["sourceLanguage"] = batch_data[0][language_column]
+    print(batch_data)
+    payload["config"]["language"]["sourceLanguage"] = batch_data[0]["locale"]
+    if payload["config"]["language"]["sourceLanguage"] == 'pa-IN':
+        payload["config"]["language"]["sourceLanguage"] = 'pa'
     payload["audio"] = [
-        {"audioContent": _encode_audio(data[input_column])}
+        {"audioContent": _encode_audio(data[input_column]["array"])}
         for data in batch_data
     ]
     payload = ULCAAsrInferenceRequest(**payload)
@@ -89,6 +101,7 @@ def generate_nmt_payload(batch_data: list, input_column: str):
             "postProcessors": [],
         }
     }
+    
     payload["input"] = [{"source": data[input_column]} for data in batch_data]
     payload = ULCATranslationInferenceRequest(**payload)
     return payload.dict()
@@ -98,6 +111,59 @@ def parse_nmt_response(response: dict):
     payload = ULCATranslationInferenceResponse(**response)
     return [{"text": p.target} for p in payload.output]
 
+def generate_tts_payload(batch_data, input_column, language_column):
+    #For TTS, Batch Length should be taken as 1 to generate the results in the same gender
+    payload = {
+        "config": {
+            "language": {
+                "sourceLanguage" : batch_data[0][language_column]
+            },
+            "gender": batch_data[0]["gender"]
+     },
+     "input" : {
+        "source" : str(batch_data[0][input_column])
+     }
+}
+    payload = ULCATtsInferenceRequest(**payload)
+    return payload.dict()
+
+def parse_tts_response(response):
+    payload = ULCATtsInferenceResponse(**response)
+    return [{"audio": p.audioContent} for p in payload.audio]
+
+def generate_transliteration_payload(batch_data, input_column):
+    payload = {
+        "config": {
+            "serviceId": "",
+            "language": {
+                "sourceLanguage": "en",
+                "targetLanguage": "",
+            },
+            "isSentence": False,
+            "numSuggestions": 1
+        }
+
+    }
+    # print(batch_data)
+    # payload["config"]["language"]["sourceLanguage"] = batch_data[0]["en"]
+    payload["config"]["language"]["targetLanguage"] = AKSHARANTAR_TO_ULCA_LANGUAGE_CODE_MAPPING.get(batch_data[0]["unique_identifier"][:3])
+    payload["input"] = [
+        {"source": str(data[input_column]) } for data in batch_data
+    ]
+
+    payload["controlConfig"] = {
+            "dataTracking" : True
+            }
+    payload = ULCATransliterationInferenceRequest(**payload)
+    return payload.dict()
+
+def parse_transliteration_response(response):
+    try :   
+        payload = ULCATransliterationInferenceResponse(**response)
+        return [{"text": p.target} for p in payload.output]
+    except :
+        print(response)
+        return [{"text": [""]} for p in range(BATCH_LEN)]
 
 class DhruvaRESTModel:
     def __init__(
@@ -118,9 +184,9 @@ class DhruvaRESTModel:
     def _infer(self, batch_data: List):
         try:
             self.payload = globals()[f"generate_{self.task}_payload"](batch_data, self.input_column)
+            # print(self.payload)
             if self.payload is None:
                 raise ValueError("Empty payload")
-
             results = requests.post(
                 self.url, data=json.dumps(self.payload), headers=self.headers, timeout=30
             ).json()

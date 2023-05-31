@@ -6,7 +6,7 @@ import argparse
 from datasets import load_dataset
 
 from dhruva_models import DhruvaRESTModel, DhruvaSocketModel
-from dhruva_evaluators import DhruvaASREvaluator, DhruvaMTEvaluator
+from dhruva_evaluators import DhruvaASREvaluator, DhruvaMTEvaluator, DhruvaTTSEvaluator, DhruvaTransliterationEvaluator
 from constants import (
     Enums,
     ULCA_LANGUAGE_CODE_TO_FLORES_MAPPING,
@@ -20,6 +20,8 @@ from dhruva_logger import logger
 TASK_EVALUATOR_MAPPING = {
     Enums.tasks.NMT: DhruvaMTEvaluator,
     Enums.tasks.ASR: DhruvaASREvaluator,
+    Enums.tasks.TTS: DhruvaTTSEvaluator,
+    Enums.tasks.Transliteration: DhruvaTransliterationEvaluator
 }
 
 MODEL_TYPE_MODEL_MAPPING = {
@@ -54,6 +56,7 @@ class Evaluation:
         elif dataset in (Enums.datasets.MUCS, Enums.datasets.IndicSUPERB):
             lang = source_language
             dataset_column = "audio"
+            
         else:
             raise KeyError("Can't find input column for given dataset")
 
@@ -176,7 +179,7 @@ class EvaluationSuite:
             input_columns = [None for i in range(len(source_languages))]
             label_columns = [None for i in range(len(source_languages))]
             subsets = [None for i in range(len(source_languages))]
-
+        print(source_languages, target_languages, input_columns, label_columns, subsets)
         for slang, tlang, inp_col, label_col, subset in zip(
             source_languages, target_languages, input_columns, label_columns, subsets
         ):
@@ -338,3 +341,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     suite = EvaluationSuite(args.file)
     suite.run()
+

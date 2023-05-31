@@ -134,20 +134,11 @@ ULCA_LANGUAGE_CODE_TO_AKSHARANTAR_MAPPING = {
     "sn": "san",
     "pa": "pan",
     "as": "asm",
-    "bn": "ben",
-    "or": "ori",
+    "bn": "beng",
+    "or": "ory",
     "ur": "urd",
-    "kn": "kan",
+    "ka": "kan",
     "gu": "guj",
-    "brx": "brx",
-    "ks": "kas",
-    "gom": "kok",
-    "mai": "mai",
-    "mni": "mni",
-    "ne": "nep",
-    "sa": "san",
-    "sd": "sid",
-
 }
 
 AKSHARANTAR_TO_ULCA_LANGUAGE_CODE_MAPPING = {
