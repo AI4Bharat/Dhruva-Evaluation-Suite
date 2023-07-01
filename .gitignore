@@ -8,7 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
+# build/
 develop-eggs/
 dist/
 downloads/
@@ -133,4 +133,6 @@ datasets/preprocessed/*
 datasets/outputs/*
 *.jsonl
 *.tar*
+
+error_files/
 *.DS_Store
