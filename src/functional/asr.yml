@@ -9,7 +9,7 @@ model:
 
 dataset:
   - name: "MUCS"
-    path: "AI4Bharat/MUCS_internal"
+    path: "ai4bharat/MUCS_internal"
     source_language: "hi"
     target_language : "hi"
     input_column : "path"
