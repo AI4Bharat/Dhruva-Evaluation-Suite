@@ -148,7 +148,7 @@ python3 payload_generator.py --payload_path "<AUDIO FILE>.wav" --source_language
 #### NMT
 
 ```bash
-python3 payload_generator.py --payload "<SENTENCE>" --source_language "<LANG CODE>" --target_language "<LANG CODE>" --token "API KEY>" --task "NMT" --payload_meta "<PAYLOAD METADATA>"
+python3 payload_generator.py --payload "<SENTENCE>" --source_language "<LANG CODE>" --target_language "<LANG CODE>" --token "<API KEY>" --task "NMT" --payload_meta "<PAYLOAD METADATA>"
 ```  
 #### TTS
 
