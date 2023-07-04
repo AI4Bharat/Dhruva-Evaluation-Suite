@@ -5,15 +5,15 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fwhisper-medium-en--gpu--t4"
+  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
 
 dataset:
-  - name: "mozilla-foundation/common_voice_13_0"
-    path: "mozilla-foundation/common_voice_13_0"
-    source_language: "bn"
-    target_language : "bn"
-    input_column : "audio"
-    label_column : "sentence"
+  - name: "MUCS"
+    path: "AI4Bharat/MUCS_internal"
+    source_language: "hi"
+    target_language : "hi"
+    input_column : "path"
+    label_column : "transcript"
     split: "test"
-    subset: "bn"
-    language : "bn"
+    subset: "hi"
+    language : "hi"

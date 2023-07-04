@@ -60,24 +60,29 @@ feature = datasets.Audio()
 
 def _encode_audio(raw_input):
     data = feature.encode_example(raw_input)
-    return base64.b64encode(data["bytes"]).decode("utf-8")
+    # print(data)
+    return base64.b64encode(open(data["path"],"rb").read()).decode("utf-8")
 
 
 def generate_asr_payload(batch_data: list, input_column: str):
     payload = {
+        "controlConfig": {
+    "dataTracking": True
+  },
         "config": {
             "language": {},
             "audioFormat": "wav",
             "samplingRate": 16000,
             "postProcessors": [],
+            "encoding" : "base64"
         }
     }
-    print(batch_data)
-    payload["config"]["language"]["sourceLanguage"] = batch_data[0]["locale"]
+    # print(batch_data)
+    payload["config"]["language"]["sourceLanguage"] = batch_data[0]["language"]
     if payload["config"]["language"]["sourceLanguage"] == 'pa-IN':
         payload["config"]["language"]["sourceLanguage"] = 'pa'
     payload["audio"] = [
-        {"audioContent": _encode_audio(data[input_column]["array"])}
+        {"audioContent": _encode_audio(data["audio"][input_column])}
         for data in batch_data
     ]
     payload = ULCAAsrInferenceRequest(**payload)
@@ -184,18 +189,25 @@ class DhruvaRESTModel:
     def _infer(self, batch_data: List):
         try:
             self.payload = globals()[f"generate_{self.task}_payload"](batch_data, self.input_column)
-            # print(self.payload)
+            # file_path = "data.json"
+
+            # # Write the JSON object to the file
+            # with open(file_path, 'w') as file:
+            #     json.dump(self.payload, file)
+
             if self.payload is None:
                 raise ValueError("Empty payload")
             results = requests.post(
-                self.url, data=json.dumps(self.payload), headers=self.headers, timeout=30
+                self.url, data=json.dumps(self.payload), headers=self.headers, timeout=90
             ).json()
-
+            # print(results)
             parsed_results = globals()[f"parse_{self.task}_response"](results)
 
         except Exception as e:
+            # print()
             import traceback
             print(traceback.print_exc(e))
+            return [{"text": ""} for p in range(BATCH_LEN)]
 
         return parsed_results
 

@@ -1,11 +1,11 @@
 task:
   name: "evaluation"
   type: "transliteration"
-  metric: "accuracy/evaluate_accuracy.py"
+  metric: "cer"
 
 model:
   type: "REST"
-  url: "https://api.dhruva.co/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
+  url: "https://api.dhruva.ai4bharat.org/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
 
 dataset:
   # - name: "ai4bharat/aksharantar"
@@ -89,11 +89,12 @@ dataset:
   #   label_column: "native word"
   #   subset: "tel"
 
-  - name: "ai4bharat/aksharantar"
-    path: "/home/dhruvauser/evaluation_suite/new_eval/Dhruva-Evaluation-Suite/src/functional/dhruva_datasets/Aksharantar/urd/test"
+  - name: "aksharantar"
+    # path: "ai4bharat/aksharantar"
+    path: "/home/dhruvauser/evaluation_suite/new_eval/Dhruva-Evaluation-Suite/src/functional/dhruva_datasets/Aksharantar/urd/"
     source_language: "en"
     target_language: "ur"
-    split: "test"
+    split: "train"
     input_column: "english word"
     label_column: "native word"
     subset: "urd"
