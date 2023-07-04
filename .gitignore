@@ -136,3 +136,9 @@ datasets/outputs/*
 
 error_files/
 *.DS_Store
+Top1 Accuracy/
+Top3 Accuracy /
+Top5 Accuracy/
+data.json
+src/functional/dhruva_datasets/*
+transliteration results CER/

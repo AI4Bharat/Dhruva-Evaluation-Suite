@@ -1,3 +1,6 @@
 [submodule "src/functional/schema"]
 	path = src/functional/schema
 	url = https://github.com/AI4Bharat/Dhruva-Schema.git
+[submodule "src/performance/schema"]
+	path = src/performance/schema
+	url = https://github.com/AI4Bharat/Dhruva-Schema.git

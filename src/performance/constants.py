@@ -61,7 +61,6 @@ class _Task(BaseModel):
 class _Model(BaseModel):
     type: str
     url: str
-    service_id: Optional[str]
 
 class _Dataset(BaseModel):
     name: str
@@ -135,20 +134,11 @@ ULCA_LANGUAGE_CODE_TO_AKSHARANTAR_MAPPING = {
     "sn": "san",
     "pa": "pan",
     "as": "asm",
-    "bn": "ben",
-    "or": "ori",
+    "bn": "beng",
+    "or": "ory",
     "ur": "urd",
-    "kn": "kan",
+    "ka": "kan",
     "gu": "guj",
-    "brx": "brx",
-    "ks": "kas",
-    "gom": "kok",
-    "mai": "mai",
-    "mni": "mni",
-    "ne": "nep",
-    "sa": "san",
-    "sd": "sid",
-
 }
 
 AKSHARANTAR_TO_ULCA_LANGUAGE_CODE_MAPPING = {
@@ -168,7 +158,7 @@ ULCA_LANGUAGE_CODE_TO_FLORES_MAPPING = {
     "bn": "ben_Beng",
     "or": "ory_Orya",
     "ur": "urd_Arab",
-    "kn": "kan_Knda",
+    "ka": "kan_Knda",
     "gu": "guj_Gujr",
 }
 

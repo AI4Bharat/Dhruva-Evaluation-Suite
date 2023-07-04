@@ -1,0 +1,6 @@
+wrk.method = "POST"
+wrk.headers["Authorization"] = "99685ac6-1b71-4064-aa01-c0b2fbbb792e"
+wrk.headers["content-type"] = "application/json"
+wrk.headers["header1"] = "<header1-value"
+wrk.headers["header2"] = "<header2-value"
+wrk.body = "{\"input\": [{\"source\": \"the sugar bear character was popular enough to have occasional premium toys\"}],\"config\": {\"language\": {\"sourceLanguage\": \"en\",\"targetLanguage\": \"hi\"}}}"
