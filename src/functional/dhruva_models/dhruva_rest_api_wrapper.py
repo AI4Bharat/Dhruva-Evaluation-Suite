@@ -178,13 +178,13 @@ class DhruvaRESTModel:
         self,
         task: str,
         url: str,
-        # input_language_column: str,
         input_column: str,
         api_key: str,
         **kwargs,
     ):
         self.task = task
         self.url = url
+        self.service_id = None
         self.input_language_column = kwargs.get("input_language_column")
         self.input_column = input_column
         self.headers = {"Authorization": api_key}

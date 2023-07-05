@@ -61,6 +61,7 @@ class _Task(BaseModel):
 class _Model(BaseModel):
     type: str
     url: str
+    service_id: Optional[str]
 
 class _Dataset(BaseModel):
     name: str
@@ -167,7 +168,7 @@ ULCA_LANGUAGE_CODE_TO_FLORES_MAPPING = {
     "bn": "ben_Beng",
     "or": "ory_Orya",
     "ur": "urd_Arab",
-    "ka": "kan_Knda",
+    "kn": "kan_Knda",
     "gu": "guj_Gujr",
 }
 

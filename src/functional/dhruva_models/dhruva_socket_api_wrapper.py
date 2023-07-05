@@ -15,8 +15,11 @@ def generate_asr_task_sequence():
     return [
         {
             "taskType": "asr",
+            "controlConfig": {
+                "dataTracking": True,
+            },
             "config": {
-                "language": {"sourceLanguage": "en"},
+                "language": {"sourceLanguage": "hi", "sourceScriptCode": "deva"},
                 "samplingRate": 16000,
                 "audioFormat": "wav",
                 "encoding": "base64",
@@ -45,7 +48,7 @@ def generate_nmt_task_sequence(batch_data: list, input_column: str):
     }
     payload["input"] = [{"source": data[input_column]} for data in batch_data]
     # payload = ULCATranslationInferenceRequest(**payload)
-    return payload.dict()
+    # return payload.dict()
 
 
 def parse_nmt_response(response: dict):
@@ -58,6 +61,7 @@ class DhruvaStreamingClient:
     def __init__(
         self,
         socket_url: str,
+        service_id: str,
         api_key: str,
         task_sequence: list,
         auto_start: bool = False,
@@ -71,7 +75,7 @@ class DhruvaStreamingClient:
         # Parameters
         self.task_sequence = task_sequence
         self.task_sequence__depth = len(task_sequence)
-        self.task_sequence__intermediate_response_depth = 2  # ASR+NMT
+        self.task_sequence__intermediate_response_depth = 1  # ASR
 
         # states
         self.audio_stream = None
@@ -87,14 +91,20 @@ class DhruvaStreamingClient:
             transports=["websocket", "polling"],
             auth={"authorization": api_key},
         )
+        self.service_id = service_id
+        self.parsed_response = ""
 
     def response_handler(self, response):
         task = ""
         for t in self.task_sequence:
             task = t["taskType"]
 
-        self.parsed_response = globals()[f"parse_{task}_response"](response)
-        print("\n\n------\nfinal response: ", self.parsed_response, "\n----------\n")
+        try:
+            print("response: ", response)
+            self.parsed_response = globals()[f"parse_{task}_response"](response)
+            print("\n\n------\nfinal response: ", self.parsed_response, "\n----------\n")
+        except Exception as e:
+            print(f"Error: {str(e)}")
 
     def _get_client(self, on_ready=None) -> socketio.Client:
         sio = socketio.Client(reconnection_attempts=5)
@@ -117,8 +127,8 @@ class DhruvaStreamingClient:
                 on_ready()
 
         @sio.on("response")
-        def response(response):
-            # print("response: ", response)
+        def response(response, response_type):
+            print("response: ", response, response_type)
             if self.is_stream_inactive:
                 self.response_handler(response)
 
@@ -152,6 +162,8 @@ class DhruvaStreamingClient:
         frequency = 16000
 
         slices = np.arange(0, len(data["audio"]["array"])/16000, stream_duration, dtype=np.int)
+        if slices[-1] < len(data["audio"]["array"])/16000:
+            slices = np.append(slices, len(data["audio"]["array"])/16000)
 
         for start, end in zip(slices[:-1], slices[1:]):
             start_audio = start * frequency
@@ -175,9 +187,6 @@ class DhruvaStreamingClient:
                     self.is_stream_inactive,
                 ),
             )
-            # print("before wait")
-            # self.socket_client.wait()
-            # print("after wait")
             time.sleep(2)
 
         self._transmit_end_of_stream()
@@ -202,21 +211,28 @@ class DhruvaSocketModel:
         self,
         task: str,
         url: str,
+        service_id: str,
         input_column: str,
         api_key: str,
         **kwargs,
     ):
         self.task = task
         self.url = url
+        self.service_id = service_id
         self.input_language_column = kwargs.get("input_language_column")
         self.input_column = input_column
         self.api_key = api_key
 
     def _infer(self, data):
+        task_sequence = globals()[f"generate_{self.task}_task_sequence"]()
+        # support multiple tasks in a sequence when needed
+        task_sequence[0]["config"]["serviceId"] = self.service_id
+
         streamer = DhruvaStreamingClient(
             socket_url=self.url,
+            service_id=self.service_id,
             api_key=self.api_key,
-            task_sequence=globals()[f"generate_{self.task}_task_sequence"](),
+            task_sequence=task_sequence,
             auto_start=False,
         )
         streamer.send_file(data)
@@ -233,8 +249,9 @@ class DhruvaSocketModel:
         errors = []
         for audio in tqdm(all_audios):
             try:
-                self._infer(audio)
-            except Exception:
+                all_results.extend(self._infer(audio))
+            except Exception as e:
+                print("exception: ", str(e))
                 errors.append(audio["audio"]["path"])
 
         pd.DataFrame(errors).to_csv("errors.csv")
