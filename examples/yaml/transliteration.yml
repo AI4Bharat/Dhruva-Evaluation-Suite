@@ -8,13 +8,11 @@ model:
   url: "https://api.dhruva.ai4bharat.org/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
 
 dataset:
-
   - name: "aksharantar"
-    # path: "ai4bharat/aksharantar"
     path: "/home/dhruvauser/evaluation_suite/new_eval/Dhruva-Evaluation-Suite/src/functional/dhruva_datasets/Aksharantar/hin/"
     source_language: "en"
-    target_language: "hin"
-    split: "train"
+    target_language: "hi"
+    split: "test"
     input_column: "english word"
     label_column: "native word"
     subset: "hin"
