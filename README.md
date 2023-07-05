@@ -2,6 +2,28 @@
 
 Welcome to Dhruva Evaluation Suite! This tool can be used to perform functional testing and performance testing of Dhruva.
 
+## Getting Started
+
+### Prerequisites
+To perform functional testing, you will need a dataset hosted on Huggingface to easily hit the models and generate the results with required metrics.
+
+Top perform Performance testing, you will need one data element for any of the task you want to benchmark, with which we will create a payload file.
+
+### Installation
+Clone the repository, and update the submodule with the following command:
+
+```bash
+git clone --recurse-submodules https://github.com/AI4Bharat/Dhruva-Evaluation-Suite.git
+```
+
+Install all the python packages using Poetry, and initiate the Virtual Environment:
+
+```bash
+poetry install
+```
+```bash
+poetry shell
+```
 ## Functional Testing
 
 To perform Fucntional testing for a task using the Dhruva Evaluation tool, build a simple YML file as shown below (according to the task). Examples given below:
@@ -103,7 +125,7 @@ dataset:
 
 
 ```  
-### Transilteraton
+### Transliteraton
 
 ```yml
 task:
@@ -161,14 +183,44 @@ python3 payload_generator.py --payload "<SENTENCE>" --source_language "<LANG COD
 python3 payload_generator.py --payload_path "<AUDIO FILE>.wav" --source_language "<LANG CODE>" --target_language "<LANG CODE>" --token "<API KEY>" --task "S2S" --payload_meta "<PAYLOAD METADATA>" --gender "<GENDER>"
 ```
 
-To perform the load test, use the load_test_helper.py file to define all the cases and run the following command:
+To perform the load test, we need to build a YML file in the following format which would help us run the tests:
+
+```yml
+task:
+  name: "evaluation"
+  type: "asr"
+
+model:
+  type: "REST"
+  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+
+params:
+  payload_path: "ASR_check.lua"
+  test_params: {
+    1: {"threads": 5, "connections": 10, "rps": 10, "duration": "30s"},
+    2: {"threads": 10, "connections": 20, "rps": 20, "duration": "2m"}
+    }
+
+```
+
+This file is used to run a performance benchmark test with two different loads generated one after the other as shown above.
+
+After the creation of the YML file, run the following command to perform the load test:
 
 ```bash
-python3 load_test_helper.py --task "<TASK NAME>" --lua_file "<PATH TO GENERATED LUA FILE>" --url "<URL TO THE API ENDPOINT>" --result_folder_name "<PATH TO DIRECTORY>"
+python3 rest.py -f "<FILE NAME>.py>"
 ```
 ### Websocket Performance Testing
 
 To perform websocket testing, you can make use of the locust software to generate the load and get the results. Run the following command:
+
 ```bash
-locust -f locust-socket-test.py --users <NUMBER OF USERS> --spawn-rate <DESIRED SPAWN RATE> -H http://api.dhruva.ai4bharat.org
+locust -f locust-socket.py --users <NUMBER OF USERS> --spawn-rate <DESIRED SPAWN RATE> -H <URL>
 ```
+
+## Contributing
+Clone the Project
+Create your Feature Branch (git checkout -b feature/AmazingFeature)
+Commit your Changes (git commit -m 'Add some AmazingFeature')
+Push to the Branch (git push origin feature/AmazingFeature)
+Open a Pull Request

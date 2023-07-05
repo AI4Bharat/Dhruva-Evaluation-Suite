@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# Script to create multiple terminal windows to create a master-worker environment in Locust
 # Start Locust master node in a new virtual terminal
 locust -f locust-socket.py -H http://dhruva-api.bhashini.gov.in --master &
 

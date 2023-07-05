@@ -60,22 +60,22 @@ args = parser.parse_args()
 if args.payload is None and args.payload_path is None:
     print("Error: either --payload or --payloadPath must be provided")
 
-if args.task == "NMT":
+if args.task.upper() == "NMT":
     if args.target_language is None:
         print("Error: --target must be provided for NMT")
 
-elif args.task == "TTS":
+elif args.task.upper() == "TTS":
     if args.gender is None:
         print("Error: --gender must be provided for TTS")
 
-if args.task == "S2S":
+if args.task.upper() == "S2S":
     if args.target_language is None:
         print("Error: --target must be provided for S2S")
     if args.gender is None:
         print("Error: --gender must be provided for S2S")
 
 
-if args.task == "NMT":
+if args.task.upper() == "NMT":
     # text = "बहुत समय पहले की बात है। वर्धमान नाम का एक व्यापारी दक्षिण भारत में रहता था एक दिन जब वो आराम कर रहा था तब उसके मन में खयाल आया की इस दुनिया में पैसा ही सब कुछ है जितना व्यक्ति को मिलता है वो उतना ही सक्तिशाली होता है दुश्मन भी अमीर दोस्त ढूंढते हैं वृद्ध भी जवान हो जाते हैं अगर उनके पास पैसा होता है"
 
     # Create an argument parser
@@ -86,7 +86,7 @@ if args.task == "NMT":
     target_lan = args.target_language
     ACCESS_TOKEN = args.token
 
-    lua_file_path = f"nmt_test/{args.task}_{args.payload_meta}.lua"
+    lua_file_path = f"{args.task}_{args.payload_meta}.lua"
 
     body = {
         "input": [{"source": ""}],
@@ -106,7 +106,7 @@ if args.task == "NMT":
         f.write(f'wrk.body = "{str_body}"\n')
 
 
-if args.task == "TTS":
+if args.task.upper() == "TTS":
     # Create an argument parser
 
     # Assign the argument values to variables
@@ -116,7 +116,7 @@ if args.task == "TTS":
     ACCESS_TOKEN = args.token
 
     # Define the path to save the Lua file
-    lua_file_path = f"tts_test/{args.task}_{args.payload_meta}.lua"
+    lua_file_path = f"{args.task}_{args.payload_meta}.lua"
 
     body = {
         "input": [{"source": ""}],
@@ -135,7 +135,7 @@ if args.task == "TTS":
         f.write(f'wrk.headers["Authorization"] = "{ACCESS_TOKEN}"\n')
         f.write(f'wrk.body = "{str_body}"\n')
 
-if args.task == "ASR":
+if args.task.upper() == "ASR":
     # Assign the argument values to variables
     path = args.payload_path
     sampling = args.sampling_rate
@@ -150,7 +150,7 @@ if args.task == "ASR":
         encoded_string = str(encoded_string, "ascii", "ignore")
         # print(encoded_string)
     # Define the path to save the Lua file
-    lua_file_path = f"{args.task.lower()}_test/{args.task}_{args.payload_meta}.lua"
+    lua_file_path = f"{args.task}_{args.payload_meta}.lua"
     body = {
         "audio": [{"audioContent": ""}],
         "config": {
@@ -174,7 +174,7 @@ if args.task == "ASR":
         f.write(f'wrk.headers["Authorization"] = "{ACCESS_TOKEN}"\n')
         f.write(f'wrk.body = "{str_body}"')
 
-if args.task == "S2S":
+if args.task.upper() == "S2S":
     # Assign the argument values to variables
     path = args.payload_path
     sampling = args.sampling_rate
@@ -191,7 +191,7 @@ if args.task == "S2S":
         encoded_string = str(encoded_string, "ascii", "ignore")
         # print(encoded_string)
     # Define the path to save the Lua file
-    lua_file_path = f"{args.task.lower()}_test/{args.task}_{args.payload_meta}.lua"
+    lua_file_path = f"{args.task}_{args.payload_meta}.lua"
     body = {
         "audio": [{"audioContent": ""}],
         "config": {
@@ -223,7 +223,7 @@ if args.task.lower() == "transliteration":
     ACCESS_TOKEN = args.token
 
     # Define the path to save the Lua file
-    lua_file_path = f"nmt_test/{args.task}_{args.payload_meta}.lua"
+    lua_file_path = f"{args.task}_{args.payload_meta}.lua"
 
     body = {
         "input": [{"source": ""}],

@@ -2,27 +2,30 @@ import glob
 import time
 import datetime
 import subprocess
-
+import yaml
 import pandas as pd
-
+from constants import UserConfiguration
 import argparse
 
 parser = argparse.ArgumentParser(description="Process four input strings")
 
-# Add the arguments
-parser.add_argument("--task", help="ASR, NMT OR TTS", required=True)
-parser.add_argument("--lua_file", help="Name of the lua file", required=True)
-parser.add_argument("--url", help="URL of the API endpoint", required=True)
-parser.add_argument(
-    "--result_folder_name", help="Location ID for the results files", required=True
-)
 
+def parse_yaml_file(yaml_file_path):
+    """Load the YAML file contents into a dictionary"""
+    with open(yaml_file_path, "r") as f:
+        yaml_data = yaml.safe_load(f)
+        if not isinstance(yaml_data, dict):
+            raise TypeError(f"Config file not found: {yaml_file_path}")
+    return yaml_data
+
+
+# Add the arguments
+parser.add_argument("-f", "--file", default="")
 
 args = parser.parse_args()
+user_config = UserConfiguration.parse_obj(parse_yaml_file(args.file))
 
-test_params = {
-    1: {"threads": 30, "connections": 140, "rps": 55, "duration": "30s"},
-}
+test_params = user_config.params.test_params
 
 
 def normalise_latencies(lat):
@@ -35,20 +38,13 @@ def normalise_latencies(lat):
         return int(lat[:-1]) * 3600
 
 
-def parse_files():
-    data = []
-    for g in glob.glob("./results_ta_1/*.txt"):
-        data.append(parse_file(g))
-    pd.concat(data).to_csv("output.csv")
-
-
 def run_tests(task):
     for pno, params in test_params.items():
         print(params)
         now = datetime.datetime.now()
-        filename = f"./{args.task.lower()}_test/{args.result_folder_name}/pno_{pno}_payload_{args.lua_file.split('_')[-2]}_{args.lua_file.split('_')[-1][:-4]}_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}.txt"
+        filename = f"results/pno_{pno}_payload_{user_config.params.payload_path.split('_')[-2]}_{user_config.params.payload_path.split('_')[-1][:-4]}_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}.txt"
 
-        print(args.url)
+        print(user_config.model.url)
         command = [
             "wrk2",
             f"-t{params['threads']}",
@@ -56,9 +52,9 @@ def run_tests(task):
             f"-d{params['duration']}",
             f"-R{params['rps']}",
             "-s",
-            f"{args.task.lower()}_test/{args.lua_file}",
+            f"{user_config.params.payload_path}",
             "--latency",
-            f"{args.url}",
+            f"{user_config.model.url}",
         ]
         print(command)
         status = subprocess.run(command, shell=False, capture_output=True)

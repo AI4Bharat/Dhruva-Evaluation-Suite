@@ -24,6 +24,7 @@ task_sequence = [
         "taskType": "translation",
         "config": {"language": {"sourceLanguage": "hi", "targetLanguage": "en"}},
     },
+]
 
 
 class SocketIOUser(User):
