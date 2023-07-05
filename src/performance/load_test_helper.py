@@ -1,5 +1,3 @@
-import json
-import os
 import glob
 import time
 import datetime
@@ -8,7 +6,6 @@ import subprocess
 import pandas as pd
 
 import argparse
-import base64
 
 parser = argparse.ArgumentParser(description="Process four input strings")
 
@@ -64,8 +61,6 @@ def run_tests(task):
             f"{args.url}",
         ]
         print(command)
-        # subprocess.run(["ls", "-l", "/dev/null"])
-        # command = f"wrk2 -t{params['threads']} -c{params['connections']} -d2m -R{params['rps']} -s nmt.lua --latency http://api.dhruva.ai4bharat.org:8090/infer_nmt | tee ./results/nmt_histo_{pno}_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}.txt"
         status = subprocess.run(command, shell=False, capture_output=True)
         print("status: ", status.stdout.decode("utf-8"))
         with open(filename, "w") as o:

@@ -4,9 +4,6 @@ from evaluate import Evaluator
 
 from dhruva_preprocessors import clean_and_normalize_transcripts
 
-# from evaluate.utils.file_utils import add_end_docstrings, add_start_docstrings
-# from evaluate.evaluator.base import EVALUATOR_COMPUTE_RETURN_DOCSTRING, EVALUTOR_COMPUTE_START_DOCSTRING
-
 
 TASK_DOCUMENTATION = r"""
     Examples:

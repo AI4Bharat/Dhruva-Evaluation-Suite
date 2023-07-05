@@ -11,14 +11,15 @@ from dhruva_logger import logger
 
 class _EnvSettings(PydanticBaseSettings):
     """Initialises all local settings from the env"""
+
     api_key: str
 
     class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
+        env_file = ".env"
+        env_file_encoding = "utf-8"
         fields = {
-            'api_key': {
-                'env': 'DHRUVA_API_KEY',
+            "api_key": {
+                "env": "DHRUVA_API_KEY",
             },
         }
 
@@ -31,23 +32,24 @@ class _TasksEnum(BaseModel):
     NER: str = "ner"
     Transliteration: str = "transliteration"
 
+
 class _ModelTypesEnum(BaseModel):
     REST: str = "rest"
     STREAMING: str = "streaming"
+
 
 class _DatasetsEnum(BaseModel):
     FLORES: str = "facebook/flores"
     MUCS: str = "ai4bharat/MUCS-internal"
     IndicSUPERB: str = "ai4bharat/IndicSUPERB-internal"
-    Aksharantar : str = "ai4bharat/aksharantar"
+    Aksharantar: str = "ai4bharat/aksharantar"
+
 
 class _Enums(BaseModel):
     tasks: _TasksEnum = _TasksEnum()
     model_type: _ModelTypesEnum = _ModelTypesEnum()
     datasets: _DatasetsEnum = _DatasetsEnum()
-    # tasks: Enum = Enum("task", "NMT TTS ASR NER")
-    # model_type: Enum = Enum("model_type", "REST STREAMING")
-    # datasets: Enum = Enum("datasets", "FLORES")
+
 
 Enums = _Enums()
 
@@ -58,9 +60,11 @@ class _Task(BaseModel):
     type: str
     metric: str
 
+
 class _Model(BaseModel):
     type: str
     url: str
+
 
 class _Dataset(BaseModel):
     name: str
@@ -71,9 +75,7 @@ class _Dataset(BaseModel):
     label_column: Optional[Union[list[str], str]]
     split: str
     subset: Optional[Union[list[str], str]]
-    # subset: ""
-    # class Config:
-    #     extra = Extra.allow
+
 
 class UserConfiguration(PydanticBaseSettings):
     """Initialises all user configs from a yaml file"""
@@ -85,42 +87,6 @@ class UserConfiguration(PydanticBaseSettings):
 
     class Config:
         config_files = [Path("test-nmt.yml")]
-
-        # @classmethod
-        # def customise_sources(
-        #         cls,
-        #         init_settings: SettingsSourceCallable,
-        #         env_settings: SettingsSourceCallable,
-        #         file_secret_settings: SettingsSourceCallable
-        # ) -> tuple[SettingsSourceCallable, ...]:
-        #     return init_settings, env_settings, config_file_settings
-
-
-# def config_file_settings(settings: PydanticBaseSettings) -> dict[str, Any]:
-#     config: dict[str, Any] = {}
-#     if not isinstance(settings, PydanticBaseSettings):
-#         return config
-#     for path in settings.Config.config_files:
-#         if not path.is_file():
-#             logger.error(f"No file found at `{path.resolve()}`")
-#             continue
-#         logger.info(f"Reading config file `{path.resolve()}`")
-#         if path.suffix in {".yaml", ".yml"}:
-#             config = deep_update(config, parse_yaml_file(path))
-#         else:
-#             logger.error(f"Unknown config file extension `{path.suffix}`")
-#     return config
-
-
-# def parse_yaml_file(yaml_file_path):
-#     """ Load the YAML file contents into a dictionary"""
-#     with open(yaml_file_path, "r") as f:
-#         yaml_data = yaml.safe_load(f)
-#         if not isinstance(yaml_data, dict):
-#             raise TypeError(
-#                 f"Config file not found: {yaml_file_path}"
-#             )
-#     return yaml_data
 
 
 # Lookups
@@ -167,9 +133,6 @@ FLORES_TO_ULCA_LANGUAGE_CODE_MAPPING = {
 }
 
 
-
-DATASET_INPUT_COLUMN_MAPPING = {
-    "facebook/flores": "sentence_"
-}
+DATASET_INPUT_COLUMN_MAPPING = {"facebook/flores": "sentence_"}
 
 EnvSettings = _EnvSettings()

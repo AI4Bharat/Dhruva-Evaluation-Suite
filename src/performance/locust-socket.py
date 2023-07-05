@@ -1,6 +1,3 @@
-import io
-import time
-import base64
 import gevent
 import socketio
 import numpy as np
@@ -13,7 +10,6 @@ NUM_ALLOWED_HITS = 3
 
 task_sequence = [
     {
-        # "serviceId": "ai4bharat/conformer-en-gpu--t4",
         "taskType": "asr",
         "config": {
             "language": {"sourceLanguage": "hi"},
@@ -25,21 +21,14 @@ task_sequence = [
         },
     },
     {
-        # "serviceId": "ai4bharat/indictrans-fairseq-all-gpu--t4",
         "taskType": "translation",
         "config": {"language": {"sourceLanguage": "hi", "targetLanguage": "en"}},
     },
-    # {
-    #     # "serviceId": "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
-    #     "taskType": "tts",
-    #     "config": {"language": {"sourceLanguage": "en"}, "gender": "male"},
-    # },
-]
 
 
 class SocketIOUser(User):
     api_key: str = "99685ac6-1b71-4064-aa01-c0b2fbbb792e"
-    socket_url: str =  "wss://dhruva-api.bhashini.gov.in"
+    socket_url: str = "wss://dhruva-api.bhashini.gov.in"
     abstract = True
 
     def __init__(self, *args, **kwargs):
@@ -63,9 +52,7 @@ class SocketIOUser(User):
         # states
         self.is_speaking = True
         self.is_stream_inactive = False
-        self.socket_client = self._get_client(
-            on_ready=False
-        )
+        self.socket_client = self._get_client(on_ready=False)
         try:
             self.socket_client.connect(
                 url=self.socket_url,
@@ -157,12 +144,12 @@ class SocketIOUser(User):
 
         self.start_at = time.time()
         self.disconnected = False
-        slices = np.arange(0, len(sound)/sr, stream_duration, dtype=np.int32)
+        slices = np.arange(0, len(sound) / sr, stream_duration, dtype=np.int32)
 
         for j, (start, end) in enumerate(zip(slices[:-1], slices[1:])):
             start_audio = start * sr
             end_audio = end * sr
-            audio_slice = sound[int(start_audio): int(end_audio)]
+            audio_slice = sound[int(start_audio) : int(end_audio)]
 
             clear_server_state = not self.is_speaking
             streaming_config = {
@@ -236,7 +223,6 @@ class SocketIOUser(User):
 
 
 class MySocketIOUser(SocketIOUser):
-
     @task()
     def publish(self):
         self.result = ""
@@ -249,6 +235,3 @@ class MySocketIOUser(SocketIOUser):
 
 if __name__ == "__main__":
     pass
-
-# locust -f locust-socket-test.py --users 2 --spawn-rate 1 -H http://api.dhruva.ai4bharat.org
-# locust -f locust_socket.py --users 2 --spawn-r

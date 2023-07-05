@@ -150,8 +150,6 @@ def generate_transliteration_payload(batch_data, input_column):
             "numSuggestions": 1,
         }
     }
-    # print(batch_data)
-    # payload["config"]["language"]["sourceLanguage"] = batch_data[0]["en"]
     payload["config"]["language"][
         "targetLanguage"
     ] = AKSHARANTAR_TO_ULCA_LANGUAGE_CODE_MAPPING.get(
@@ -194,11 +192,6 @@ class DhruvaRESTModel:
             self.payload = globals()[f"generate_{self.task}_payload"](
                 batch_data, self.input_column
             )
-            # file_path = "data.json"
-
-            # # Write the JSON object to the file
-            # with open(file_path, 'w') as file:
-            #     json.dump(self.payload, file)
 
             if self.payload is None:
                 raise ValueError("Empty payload")
