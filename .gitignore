@@ -136,3 +136,5 @@ datasets/outputs/*
 
 error_files/
 *.DS_Store
+src/functional/dhruva_datasets/*
+transliteration results CER/

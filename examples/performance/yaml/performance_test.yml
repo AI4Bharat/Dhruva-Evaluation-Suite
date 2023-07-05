@@ -1,0 +1,13 @@
+task:
+  name: "evaluation"
+  type: "asr"
+
+model:
+  type: "REST"
+  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+
+params:
+  payload_path: "ASR_check.lua"
+  test_params: {
+    1: {"threads": 5, "connections": 10, "rps": 10, "duration": "30s"}}
+

@@ -8,4 +8,3 @@ def clean_and_normalize_transcripts(raw_data):
     )
     raw_data["transcript"] = preprocessed_sentence
     return raw_data
-    # return {"audio": raw_data["audio"], "transcript": preprocessed_sentence, "language": raw_data["language"]}

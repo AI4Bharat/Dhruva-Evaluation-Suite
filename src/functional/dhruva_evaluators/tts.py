@@ -1,35 +1,36 @@
+import os
+
+
 import multiprocessing as mp
 from datasets import Dataset
-from evaluate import Evaluator
-
-from dhruva_preprocessors import clean_and_normalize_transcripts
-
+from evaluate import Evaluator, EvaluationModule
 
 TASK_DOCUMENTATION = r"""
     Examples:
     ```python
     >>> from dhruva_evaluate import evaluator
     >>> from datasets import load_dataset
-    >>> task_evaluator = evaluator("dhruva-asr")
+    >>> task_evaluator = evaluator("dhruva-tts")
     >>> data = load_dataset("mozilla-foundation/common_voice_11_0", "en", split="validation[:40]")
     >>> results = task_evaluator.compute(
     >>>     model_or_pipeline=DhruvaModel,
     >>>     data=data,
-    >>>     input_column="audio",
-    >>>     label_column="transcript",
-    >>>     metric="wer",
+    >>>     input_column="transcript",
+    >>>     label_column="audio",
+    >>>     metric="mcd",
     >>> )
     ```
 """
 
 
-class DhruvaASREvaluator(Evaluator):
+# Figure out how to pass config for datasets, preprocessors, postprocessors and metrics via evaluator
+class DhruvaTTSEvaluator(Evaluator):
     """
-    Dhruva Automatic speech recognition evaluator.
+    Dhruva Text to speech evaluator.
     Methods in this class assume a data format compatible with Dhruva.
     """
 
-    def __init__(self, dataset_name: str, task="dhruva-asr", default_metric_name="wer"):
+    def __init__(self, task="dhruva-tts", default_metric_name="mcd/evaluate_mcd.py"):
         super().__init__(task, default_metric_name=default_metric_name)
 
     def prepare_data(
@@ -51,17 +52,7 @@ class DhruvaASREvaluator(Evaluator):
         self.check_required_columns(
             data, {"input_column": input_column, "label_column": label_column}
         )
-        # preprocess data based on language
-        data = data.map(
-            clean_and_normalize_transcripts,
-            load_from_cache_file=False,
-            disable_nullable=True,
-            num_proc=mp.cpu_count(),
-        )
-
-        # concatenate_texts is for WER score to be calculated for the whole dataset
-
-        return {"references": data[label_column], "concatenate_texts": True}, data
+        return {"references": data[label_column]}, data
 
     def predictions_processor(self, predictions, label_mapping):
-        return {"predictions": [pred["text"] for pred in predictions]}
+        return {"predictions": [pred["path"] for pred in predictions]}

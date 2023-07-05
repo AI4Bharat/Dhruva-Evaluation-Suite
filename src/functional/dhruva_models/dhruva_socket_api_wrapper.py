@@ -25,13 +25,17 @@ def generate_asr_task_sequence():
                 "encoding": "base64",
                 # "channel": "mono",
                 # "bitsPerSample": "sixteen"
-            }
+            },
         }
     ]
 
 
 def parse_asr_response(response: dict):
-    return [{"text": p["source"]} for resp in response["pipelineResponse"] for p in resp["output"]]
+    return [
+        {"text": p["source"]}
+        for resp in response["pipelineResponse"]
+        for p in resp["output"]
+    ]
 
 
 def generate_nmt_task_sequence(batch_data: list, input_column: str):
@@ -53,8 +57,6 @@ def generate_nmt_task_sequence(batch_data: list, input_column: str):
 
 def parse_nmt_response(response: dict):
     pass
-    # payload = ULCATranslationInferenceResponse(**response)
-    # return [{"text": p.target} for p in payload.output]
 
 
 class DhruvaStreamingClient:
@@ -82,9 +84,7 @@ class DhruvaStreamingClient:
         self.is_speaking = True
         self.is_stream_inactive = False
 
-        self.socket_client = self._get_client(
-            on_ready=False
-        )
+        self.socket_client = self._get_client(on_ready=False)
 
         self.socket_client.connect(
             url=socket_url,
@@ -102,7 +102,9 @@ class DhruvaStreamingClient:
         try:
             print("response: ", response)
             self.parsed_response = globals()[f"parse_{task}_response"](response)
-            print("\n\n------\nfinal response: ", self.parsed_response, "\n----------\n")
+            print(
+                "\n\n------\nfinal response: ", self.parsed_response, "\n----------\n"
+            )
         except Exception as e:
             print(f"Error: {str(e)}")
 
@@ -161,16 +163,23 @@ class DhruvaStreamingClient:
         stream_duration = 2
         frequency = 16000
 
-        slices = np.arange(0, len(data["audio"]["array"])/16000, stream_duration, dtype=np.int)
-        if slices[-1] < len(data["audio"]["array"])/16000:
-            slices = np.append(slices, len(data["audio"]["array"])/16000)
+        slices = np.arange(
+            0, len(data["audio"]["array"]) / 16000, stream_duration, dtype=np.int
+        )
+        if slices[-1] < len(data["audio"]["array"]) / 16000:
+            slices = np.append(slices, len(data["audio"]["array"]) / 16000)
 
         for start, end in zip(slices[:-1], slices[1:]):
             start_audio = start * frequency
             end_audio = end * frequency
-            audio_slice = data["audio"]["array"][int(start_audio): int(end_audio)]
-            chunk = feature.encode_example({
-                "array": audio_slice, "path": data["audio"]["path"], "sampling_rate": frequency})
+            audio_slice = data["audio"]["array"][int(start_audio) : int(end_audio)]
+            chunk = feature.encode_example(
+                {
+                    "array": audio_slice,
+                    "path": data["audio"]["path"],
+                    "sampling_rate": frequency,
+                }
+            )
 
             clear_server_state = not self.is_speaking
             streaming_config = {
