@@ -1,9 +1,11 @@
+import io
+import base64
+import time
 import gevent
 import socketio
 import numpy as np
-from urllib.parse import urlencode
 from scipy.io.wavfile import write, read
-from locust import User, task, between, events
+from locust import User, task
 
 NUM_ALLOWED_HITS = 3
 
@@ -16,8 +18,6 @@ task_sequence = [
             "samplingRate": 16000,
             "audioFormat": "wav",
             "encoding": "base64",
-            # "channel": "mono",
-            # "bitsPerSample": "sixteen"
         },
     },
     {
@@ -215,12 +215,10 @@ class SocketIOUser(User):
         self.disconnected = True
 
     def sleep_with_heartbeat(self, seconds):
-        # print("in sleep")
         while seconds >= 0:
             gevent.sleep(min(15, seconds))
             seconds -= 15
             self.ws.send("1")
-        # print("out of sleep")
 
 
 class MySocketIOUser(SocketIOUser):
