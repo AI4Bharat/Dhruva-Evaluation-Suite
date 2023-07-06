@@ -4,7 +4,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+  url: "<DOMAIN>/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
 
 params:
   payload_path: "ASR_check.lua"

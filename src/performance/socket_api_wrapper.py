@@ -1,3 +1,8 @@
+import io
+import os
+import time
+import base64
+import json
 import gevent
 import socketio
 import numpy as np
@@ -8,46 +13,42 @@ from locust import User, task, between, events
 NUM_ALLOWED_HITS = 3
 
 
-task_sequence = [
-    {
-        "taskType": "asr",
-        "config": {
-            "language": {"sourceLanguage": "hi"},
-            "samplingRate": 16000,
-            "audioFormat": "wav",
-            "encoding": "base64",
-            # "channel": "mono",
-            # "bitsPerSample": "sixteen"
-        },
-    },
-    {
-        "taskType": "translation",
-        "config": {"language": {"sourceLanguage": "hi", "targetLanguage": "en"}},
-    },
-]
+@events.init_command_line_parser.add_listener
+def _(parser):
+    parser.add_argument("-c", "--config-file", include_in_web_ui=False)
+
+
+@events.test_start.add_listener
+def _(environment, **kw):
+    print(f"Custom argument supplied: {environment.parsed_options.config_file}")
 
 
 class SocketIOUser(User):
-    api_key: str = "99685ac6-1b71-4064-aa01-c0b2fbbb792e"
-    socket_url: str = "wss://dhruva-api.bhashini.gov.in"
+    api_key: str = os.environ.get("DHRUVA_API_KEY")
     abstract = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        with open(self.environment.parsed_options.config_file, "r") as file:
+            data = json.load(file)
         # Default ASR settings
         self.input_audio__streaming_rate = 640
         self.input_audio__bytes_per_sample = 2
-        self.input_audio__sampling_rate = task_sequence[0]["config"]["samplingRate"]
+        self.input_audio__sampling_rate = data["task_sequence"][0]["config"]["samplingRate"]
         self.input_audio__num_channels = 1
 
         # Parameters
-        self.task_sequence = task_sequence
-        self.task_sequence__depth = len(task_sequence)
+        self.task_sequence = data["task_sequence"]
+        self.task_sequence__depth = len(data["task_sequence"])
         self.task_sequence__intermediate_response_depth = 2  # ASR+NMT
+        self.socket_url = data["socket_url"]
 
         # states
         self.is_speaking = True
         self.is_stream_inactive = False
+
+        # payload file
+        self.input_filepath = data["input_filepath"]
 
     def connect(self):
         # states
@@ -139,7 +140,7 @@ class SocketIOUser(User):
     def send_file(self):
         stream_duration = 2
 
-        input_filepath = "0116_025.wav"
+        input_filepath = self.input_filepath
         sr, sound = read(input_filepath)
         # np.array(sound, dtype=float)
 
@@ -153,9 +154,7 @@ class SocketIOUser(User):
             audio_slice = sound[int(start_audio) : int(end_audio)]
 
             clear_server_state = not self.is_speaking
-            streaming_config = {
-                "response_depth": self.task_sequence__intermediate_response_depth
-            }
+            streaming_config = {"response_depth": self.task_sequence__intermediate_response_depth}
             bytes_wav = bytes()
             byte_io = io.BytesIO(bytes_wav)
             write(byte_io, sr, audio_slice)
@@ -181,14 +180,10 @@ class SocketIOUser(User):
         # Convey that speaking has stopped
         clear_server_state = not self.is_speaking
         # clear_server_state = True
-        self.socket_client.emit(
-            "data", (None, None, clear_server_state, self.is_stream_inactive)
-        )
+        self.socket_client.emit("data", (None, None, clear_server_state, self.is_stream_inactive))
         # Convey that we can close the stream safely
         self.is_stream_inactive = True
-        self.socket_client.emit(
-            "data", (None, None, clear_server_state, self.is_stream_inactive)
-        )
+        self.socket_client.emit("data", (None, None, clear_server_state, self.is_stream_inactive))
         print("Terminated")
 
     def stop(self, force=False) -> None:

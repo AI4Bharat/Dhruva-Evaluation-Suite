@@ -32,9 +32,7 @@ class DhruvaASREvaluator(Evaluator):
     def __init__(self, dataset_name: str, task="dhruva-asr", default_metric_name="wer"):
         super().__init__(task, default_metric_name=default_metric_name)
 
-    def prepare_data(
-        self, data: Dataset, input_column: str, label_column: str, *args, **kwargs
-    ):
+    def prepare_data(self, data: Dataset, input_column: str, label_column: str, *args, **kwargs):
         """
         Prepare data.
         Args:
@@ -48,12 +46,10 @@ class DhruvaASREvaluator(Evaluator):
             `list`:  pipeline inputs.
         """
 
-        self.check_required_columns(
-            data, {"input_column": input_column, "label_column": label_column}
-        )
+        self.check_required_columns(data, {"input_column": input_column, "label_column": label_column})
         # preprocess data based on language
         data = data.map(
-            clean_and_normalize_transcripts,
+            lambda x: clean_and_normalize_transcripts(x, label_column),
             load_from_cache_file=False,
             disable_nullable=True,
             num_proc=mp.cpu_count(),

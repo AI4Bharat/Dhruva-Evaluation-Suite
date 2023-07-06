@@ -5,7 +5,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.co/services/inference/translation?serviceId=ai4bharat/indictrans-v2-all-gpu--t4"
+  url: "<DOMAIN>/services/inference/translation?serviceId=ai4bharat/indictrans-v2-all-gpu--t4"
 
 dataset:
   - name: "facebook/flores"

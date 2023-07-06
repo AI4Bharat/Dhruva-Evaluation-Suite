@@ -38,7 +38,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+  url: "<DOMAIN>/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
 
 dataset:
   - name: "MUCS"
@@ -61,7 +61,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.co/services/inference/translation?serviceId=ai4bharat/indictrans-v2-all-gpu--t4"
+  url: "<DOMAIN>/services/inference/translation?serviceId=ai4bharat/indictrans-v2-all-gpu--t4"
 
 dataset:
   - name: "facebook/flores"
@@ -135,7 +135,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
+  url: "https://<domain>/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
 
 dataset:
   - name: "ai4bharat/aksharantar"
@@ -192,7 +192,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+  url: "<DOMAIN>/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
 
 params:
   payload_path: "ASR_check.lua"

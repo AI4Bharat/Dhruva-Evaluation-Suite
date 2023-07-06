@@ -5,12 +5,12 @@ task:
 
 model:
   type: "streaming"
-  url: "wss://api.dhruva.ai4bharat.org"
+  url: "wss://<DOMAIN>"
   service_id: "ai4bharat/conformer-multilingual-indo_aryan-gpu--t4"
 
 dataset:
   - name: "ai4bharat/MUCS-internal"
-    path: "./dhruva_datasets/MUCS/MUCS.py"
+    path: "ai4bharat/MUCS-internal"
     input_column: "audio"
     label_column: "transcript"
     source_language: "hi"
