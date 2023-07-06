@@ -1,0 +1,26 @@
+{
+    "task_sequence": [
+        {
+            "taskType": "asr",
+            "config": {
+                "language": {
+                    "sourceLanguage": "hi"
+                },
+                "samplingRate": 16000,
+                "audioFormat": "wav",
+                "encoding": "base64"
+            }
+        },
+        {
+            "taskType": "translation",
+            "config": {
+                "language": {
+                    "sourceLanguage": "hi",
+                    "targetLanguage": "en"
+                }
+            }
+        }
+    ],
+    "socket_url": "wss://<DOMAIN>",
+    "input_filepath": "path/to/input/audio/file"
+}

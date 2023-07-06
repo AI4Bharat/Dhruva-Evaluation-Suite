@@ -24,6 +24,11 @@ poetry install
 ```bash
 poetry shell
 ```
+Set the DHRUVA_API_KEY environment variable in your bashrc / bash_profile
+```bash
+export DHRUVA_API_KEY="<token>"
+```
+
 ## Functional Testing
 
 To perform Fucntional testing for a task using the Dhruva Evaluation tool, build a simple YML file as shown below (according to the task). Examples given below:
@@ -38,7 +43,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+  url: "<DOMAIN>/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
 
 dataset:
   - name: "MUCS"
@@ -61,7 +66,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.co/services/inference/translation?serviceId=ai4bharat/indictrans-v2-all-gpu--t4"
+  url: "<DOMAIN>/services/inference/translation?serviceId=ai4bharat/indictrans-v2-all-gpu--t4"
 
 dataset:
   - name: "facebook/flores"
@@ -135,7 +140,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
+  url: "https://<domain>/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
 
 dataset:
   - name: "ai4bharat/aksharantar"
@@ -192,7 +197,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://api.dhruva.ai4bharat.org/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
+  url: "<DOMAIN>/services/inference/asr?serviceId=ai4bharat%2Fconformer-hi-gpu--t4"
 
 params:
   payload_path: "ASR_check.lua"
@@ -208,14 +213,45 @@ This file is used to run a performance benchmark test with two different loads g
 After the creation of the YML file, run the following command to perform the load test:
 
 ```bash
-python3 rest.py -f "<FILE NAME>.py>"
+python3 rest_api_wrapper.py -f "<FILE NAME>.py>"
 ```
 ### Websocket Performance Testing
 
-To perform websocket testing, you can make use of the locust software to generate the load and get the results. Run the following command:
+To perform websocket testing, first you would need a json file with test configuration details. Here is an example:
+
+```json
+{
+    "task_sequence": [
+        {
+            "taskType": "asr",
+            "config": {
+                "language": {
+                    "sourceLanguage": "hi"
+                },
+                "samplingRate": 16000,
+                "audioFormat": "wav",
+                "encoding": "base64"
+            }
+        },
+        {
+            "taskType": "translation",
+            "config": {
+                "language": {
+                    "sourceLanguage": "hi",
+                    "targetLanguage": "en"
+                }
+            }
+        }
+    ],
+    "socket_url": "wss://<DOMAIN>",
+    "input_filepath": "path/to/input/audio/file"
+}
+```
+
+To run the actual performance test, we make use of the locust software to generate the load and get the results. To do so, run the following command:
 
 ```bash
-locust -f locust-socket.py --users <NUMBER OF USERS> --spawn-rate <DESIRED SPAWN RATE> -H <URL>
+locust -f socket_api_wrapper.py --users <NUMBER OF USERS> --spawn-rate <DESIRED SPAWN RATE> -H <URL> -c <PATH TO JSON FILE>
 ```
 
 ## Contributing
