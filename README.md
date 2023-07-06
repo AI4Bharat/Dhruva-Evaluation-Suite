@@ -24,6 +24,11 @@ poetry install
 ```bash
 poetry shell
 ```
+Set the DHRUVA_API_KEY environment variable in your bashrc / bash_profile
+```bash
+export DHRUVA_API_KEY="<token>"
+```
+
 ## Functional Testing
 
 To perform Fucntional testing for a task using the Dhruva Evaluation tool, build a simple YML file as shown below (according to the task). Examples given below:
