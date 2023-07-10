@@ -23,15 +23,12 @@ class Accuracy(evaluate.Metric):
                     "references": datasets.Value("string"),
                 }
             ),
-            reference_urls=[
-                "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html"
-            ],
+            reference_urls=["https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html"],
         )
 
     def _compute(self, predictions, references):
         total = 0
         correct = 0
-        # print(predictions)
         for prediction, reference in zip(predictions, references):
             total += 1
             if reference in prediction:

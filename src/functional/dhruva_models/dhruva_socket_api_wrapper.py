@@ -31,11 +31,7 @@ def generate_asr_task_sequence():
 
 
 def parse_asr_response(response: dict):
-    return [
-        {"text": p["source"]}
-        for resp in response["pipelineResponse"]
-        for p in resp["output"]
-    ]
+    return [{"text": p["source"]} for resp in response["pipelineResponse"] for p in resp["output"]]
 
 
 def generate_nmt_task_sequence(batch_data: list, input_column: str):
@@ -53,10 +49,6 @@ def generate_nmt_task_sequence(batch_data: list, input_column: str):
     payload["input"] = [{"source": data[input_column]} for data in batch_data]
     # payload = ULCATranslationInferenceRequest(**payload)
     # return payload.dict()
-
-
-def parse_nmt_response(response: dict):
-    pass
 
 
 class DhruvaStreamingClient:
@@ -102,9 +94,7 @@ class DhruvaStreamingClient:
         try:
             print("response: ", response)
             self.parsed_response = globals()[f"parse_{task}_response"](response)
-            print(
-                "\n\n------\nfinal response: ", self.parsed_response, "\n----------\n"
-            )
+            print("\n\n------\nfinal response: ", self.parsed_response, "\n----------\n")
         except Exception as e:
             print(f"Error: {str(e)}")
 
@@ -163,9 +153,7 @@ class DhruvaStreamingClient:
         stream_duration = 2
         frequency = 16000
 
-        slices = np.arange(
-            0, len(data["audio"]["array"]) / 16000, stream_duration, dtype=np.int
-        )
+        slices = np.arange(0, len(data["audio"]["array"]) / 16000, stream_duration, dtype=np.int)
         if slices[-1] < len(data["audio"]["array"]) / 16000:
             slices = np.append(slices, len(data["audio"]["array"]) / 16000)
 
@@ -182,9 +170,7 @@ class DhruvaStreamingClient:
             )
 
             clear_server_state = not self.is_speaking
-            streaming_config = {
-                "response_depth": self.task_sequence__intermediate_response_depth
-            }
+            streaming_config = {"response_depth": self.task_sequence__intermediate_response_depth}
             input_data = {"audio": [{"audioContent": chunk["bytes"]}]}
 
             self.socket_client.emit(
@@ -204,14 +190,10 @@ class DhruvaStreamingClient:
     def _transmit_end_of_stream(self) -> None:
         # Convey that speaking has stopped
         clear_server_state = not self.is_speaking
-        self.socket_client.emit(
-            "data", (None, None, clear_server_state, self.is_stream_inactive)
-        )
+        self.socket_client.emit("data", (None, None, clear_server_state, self.is_stream_inactive))
         # Convey that we can close the stream safely
         self.is_stream_inactive = True
-        self.socket_client.emit(
-            "data", (None, None, clear_server_state, self.is_stream_inactive)
-        )
+        self.socket_client.emit("data", (None, None, clear_server_state, self.is_stream_inactive))
         print("Terminated")
 
 
@@ -223,14 +205,17 @@ class DhruvaSocketModel:
         service_id: str,
         input_column: str,
         api_key: str,
+        source_language: str,
+        target_language: str,
         **kwargs,
     ):
         self.task = task
         self.url = url
         self.service_id = service_id
-        self.input_language_column = kwargs.get("input_language_column")
         self.input_column = input_column
         self.api_key = api_key
+        self.source_language = source_language
+        self.target_language = target_language
 
     def _infer(self, data):
         task_sequence = globals()[f"generate_{self.task}_task_sequence"]()

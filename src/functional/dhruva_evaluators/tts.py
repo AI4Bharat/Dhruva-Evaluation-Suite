@@ -30,12 +30,19 @@ class DhruvaTTSEvaluator(Evaluator):
     Methods in this class assume a data format compatible with Dhruva.
     """
 
-    def __init__(self, task="dhruva-tts", default_metric_name="mcd/evaluate_mcd.py"):
-        super().__init__(task, default_metric_name=default_metric_name)
-
-    def prepare_data(
-        self, data: Dataset, input_column: str, label_column: str, *args, **kwargs
+    def __init__(
+        self,
+        dataset_name,
+        source_language: str,
+        target_language: str,
+        task="dhruva-tts",
+        default_metric_name="mcd/evaluate_mcd.py",
     ):
+        super().__init__(task, default_metric_name=default_metric_name)
+        self.source_language = source_language
+        self.target_language = target_language
+
+    def prepare_data(self, data: Dataset, input_column: str, label_column: str, *args, **kwargs):
         """
         Prepare data.
         Args:
@@ -49,9 +56,7 @@ class DhruvaTTSEvaluator(Evaluator):
             `list`:  pipeline inputs.
         """
 
-        self.check_required_columns(
-            data, {"input_column": input_column, "label_column": label_column}
-        )
+        self.check_required_columns(data, {"input_column": input_column, "label_column": label_column})
         return {"references": data[label_column]}, data
 
     def predictions_processor(self, predictions, label_mapping):

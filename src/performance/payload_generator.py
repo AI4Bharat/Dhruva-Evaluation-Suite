@@ -26,9 +26,7 @@ parser = argparse.ArgumentParser(description="Process four input strings")
 # Add the arguments
 parser.add_argument("--task", help="ASR, NMT or TTS", required=True)
 parser.add_argument("--payload", help="Payload for NMT or TTS tasks", required=False)
-parser.add_argument(
-    "--payload_path", help="Path for Payload Audio file for ASR Task", required=False
-)
+parser.add_argument("--payload_path", help="Path for Payload Audio file for ASR Task", required=False)
 parser.add_argument(
     "--payload_meta",
     help="Any metadata for the payload to include in the file name",
@@ -45,15 +43,9 @@ parser.add_argument("--target_language", help="Target Language", required=False)
 parser.add_argument("--gender", help="Gender", required=False)
 
 # ASR Arguments
-parser.add_argument(
-    "--sampling_rate", default="16000", help="Sampling Rate", required=False
-)
-parser.add_argument(
-    "--encoding", default="base64", help="Encoding of the file", required=False
-)
-parser.add_argument(
-    "--format", default="wav", help="Format of the file", required=False
-)
+parser.add_argument("--sampling_rate", default="16000", help="Sampling Rate", required=False)
+parser.add_argument("--encoding", default="base64", help="Encoding of the file", required=False)
+parser.add_argument("--format", default="wav", help="Format of the file", required=False)
 
 
 args = parser.parse_args()
@@ -148,7 +140,6 @@ if args.task.upper() == "ASR":
         encoded_string = base64.b64encode(wav_file)
         # Encode the file.
         encoded_string = str(encoded_string, "ascii", "ignore")
-        # print(encoded_string)
     # Define the path to save the Lua file
     lua_file_path = f"{args.task}_{args.payload_meta}.lua"
     body = {
@@ -189,7 +180,6 @@ if args.task.upper() == "S2S":
         encoded_string = base64.b64encode(wav_file)
         # Encode the file.
         encoded_string = str(encoded_string, "ascii", "ignore")
-        # print(encoded_string)
     # Define the path to save the Lua file
     lua_file_path = f"{args.task}_{args.payload_meta}.lua"
     body = {

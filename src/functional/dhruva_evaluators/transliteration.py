@@ -31,14 +31,19 @@ class DhruvaTransliterationEvaluator(Evaluator):
     """
 
     def __init__(
-        self, dataset_name, task="dhruva-transliteration", default_metric_name="cer"
+        self,
+        dataset_name,
+        source_language: str,
+        target_language: str,
+        task="dhruva-transliteration",
+        default_metric_name="cer",
     ):
         super().__init__(task, default_metric_name=default_metric_name)
         self.dataset_name = dataset_name
+        self.source_language = source_language
+        self.target_language = target_language
 
-    def prepare_data(
-        self, data: Dataset, input_column: str, label_column: str, *args, **kwargs
-    ):
+    def prepare_data(self, data: Dataset, input_column: str, label_column: str, *args, **kwargs):
         """
         Prepare data.
         Args:
@@ -51,11 +56,8 @@ class DhruvaTransliterationEvaluator(Evaluator):
             `dict`:  metric inputs.
             `list`:  pipeline inputs.
         """
-        self.check_required_columns(
-            data, {"input_column": input_column, "label_column": label_column}
-        )
+        self.check_required_columns(data, {"input_column": input_column, "label_column": label_column})
         return {"references": data[label_column]}, data
 
     def predictions_processor(self, predictions, label_mapping):
-        # print(predictions)
         return {"predictions": [pred["text"] for pred in predictions]}

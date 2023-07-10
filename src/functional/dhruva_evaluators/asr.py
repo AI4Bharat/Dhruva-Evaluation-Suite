@@ -29,8 +29,16 @@ class DhruvaASREvaluator(Evaluator):
     Methods in this class assume a data format compatible with Dhruva.
     """
 
-    def __init__(self, dataset_name: str, task="dhruva-asr", default_metric_name="wer"):
+    def __init__(
+        self,
+        dataset_name: str,
+        source_language: str,
+        target_language: str = None,
+        task="dhruva-asr",
+        default_metric_name="wer",
+    ):
         super().__init__(task, default_metric_name=default_metric_name)
+        self.source_language = source_language
 
     def prepare_data(self, data: Dataset, input_column: str, label_column: str, *args, **kwargs):
         """
@@ -49,14 +57,13 @@ class DhruvaASREvaluator(Evaluator):
         self.check_required_columns(data, {"input_column": input_column, "label_column": label_column})
         # preprocess data based on language
         data = data.map(
-            lambda x: clean_and_normalize_transcripts(x, label_column),
+            lambda x: clean_and_normalize_transcripts(x, label_column, self.source_language),
             load_from_cache_file=False,
             disable_nullable=True,
             num_proc=mp.cpu_count(),
         )
 
         # concatenate_texts is for WER score to be calculated for the whole dataset
-
         return {"references": data[label_column], "concatenate_texts": True}, data
 
     def predictions_processor(self, predictions, label_mapping):

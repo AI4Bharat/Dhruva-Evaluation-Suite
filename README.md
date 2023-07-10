@@ -33,6 +33,8 @@ export DHRUVA_API_KEY="<token>"
 
 To perform Fucntional testing for a task using the Dhruva Evaluation tool, build a simple YML file as shown below (according to the task). Examples given below:
 
+* NOTE : Datasets with column names similar to the examples mentioned below, like 'ai4bharat/MUCS_Internal' for ASR and 'facebook/flores' for NMT, hosted on HuggingFace, will work best with this tool
+
 ### ASR
 
 ```yml
@@ -140,7 +142,7 @@ task:
 
 model:
   type: "REST"
-  url: "https://<domain>/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
+  url: "<DOMAIN>/services/inference/transliteration?serviceId=ai4bharat%2Findicxlit--cpu-fsv2"
 
 dataset:
   - name: "ai4bharat/aksharantar"

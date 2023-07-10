@@ -56,7 +56,6 @@ def run_tests(task):
             "--latency",
             f"{user_config.model.url}",
         ]
-        print(command)
         status = subprocess.run(command, shell=False, capture_output=True)
         print("status: ", status.stdout.decode("utf-8"))
         with open(filename, "w") as o:

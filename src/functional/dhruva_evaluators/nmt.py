@@ -32,14 +32,19 @@ class DhruvaMTEvaluator(TranslationEvaluator):
     """
 
     def __init__(
-        self, dataset_name, task=Enums.tasks.NMT, default_metric_name="sacrebleu"
+        self,
+        dataset_name,
+        source_language: str,
+        target_language: str,
+        task=Enums.tasks.NMT,
+        default_metric_name="sacrebleu",
     ):
         super().__init__(task, default_metric_name=default_metric_name)
         self.dataset_name = dataset_name
+        self.source_language = source_language
+        self.target_language = target_language
 
-    def prepare_data(
-        self, data: Dataset, input_column: str, label_column: str, *args, **kwargs
-    ):
+    def prepare_data(self, data: Dataset, input_column: str, label_column: str, *args, **kwargs):
         """
         Prepare data.
         Args:
@@ -54,18 +59,12 @@ class DhruvaMTEvaluator(TranslationEvaluator):
             `list`:  pipeline inputs.
         """
 
-        self.check_required_columns(
-            data, {"input_column": input_column, "label_column": label_column}
-        )
+        self.check_required_columns(data, {"input_column": input_column, "label_column": label_column})
 
         # preprocess FLORES data based on language
         if self.dataset_name == Enums.datasets.FLORES:
-            source_language = input_column.replace(
-                DATASET_INPUT_COLUMN_MAPPING.get(self.dataset_name), ""
-            )
-            target_language = label_column.replace(
-                DATASET_INPUT_COLUMN_MAPPING.get(self.dataset_name), ""
-            )
+            source_language = input_column.replace(DATASET_INPUT_COLUMN_MAPPING.get(self.dataset_name), "")
+            target_language = label_column.replace(DATASET_INPUT_COLUMN_MAPPING.get(self.dataset_name), "")
             data = data.map(
                 normalize_language_codes,
                 fn_kwargs={

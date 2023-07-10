@@ -21,13 +21,10 @@ TASK_EVALUATOR_MAPPING = {
     Enums.tasks.NMT: DhruvaMTEvaluator,
     Enums.tasks.ASR: DhruvaASREvaluator,
     Enums.tasks.TTS: DhruvaTTSEvaluator,
-    Enums.tasks.Transliteration: DhruvaTransliterationEvaluator
+    Enums.tasks.Transliteration: DhruvaTransliterationEvaluator,
 }
 
-MODEL_TYPE_MODEL_MAPPING = {
-    Enums.model_type.REST: DhruvaRESTModel,
-    Enums.model_type.STREAMING: DhruvaSocketModel
-}
+MODEL_TYPE_MODEL_MAPPING = {Enums.model_type.REST: DhruvaRESTModel, Enums.model_type.STREAMING: DhruvaSocketModel}
 
 
 def parse_yaml_file(yaml_file_path):
@@ -56,7 +53,7 @@ class Evaluation:
         elif dataset in (Enums.datasets.MUCS, Enums.datasets.IndicSUPERB):
             lang = source_language
             dataset_column = "audio"
-            
+
         else:
             raise KeyError("Can't find input column for given dataset")
 
@@ -84,29 +81,27 @@ class Evaluation:
         return subset
 
     def initialise_dataset_params(
-            self,
-            source_language: str,
-            target_language: str,
-            dataset_name: str,
-            input_column: str,
-            label_column: str,
-            subset: str
-        ):
+        self,
+        source_language: str,
+        target_language: str,
+        dataset_name: str,
+        input_column: str,
+        label_column: str,
+        subset: str,
+    ):
         if input_column and label_column and subset:
             self.input_column, self.label_column, self.subset = input_column, label_column, subset
             return
 
-        self.input_column, dataset_source_lang = self.get_input_column_for_dataset(
-            source_language, dataset_name
-        )
-        self.label_column, dataset_target_lang = self.get_label_column_for_dataset(
-            target_language, dataset_name
-        )
+        self.input_column, dataset_source_lang = self.get_input_column_for_dataset(source_language, dataset_name)
+        self.label_column, dataset_target_lang = self.get_label_column_for_dataset(target_language, dataset_name)
         self.subset = self.find_data_subset(dataset_source_lang, dataset_target_lang)
 
-    def run(self, dataset_path, dataset_name, split):
+    def run(self, dataset_path, dataset_name, split, source_language, target_language):
         self.task_evaluator = self.task_evaluator_obj(
             dataset_name=dataset_name,
+            source_language=source_language,
+            target_language=target_language,
             task=self.user_config.task.type,
             default_metric_name=self.user_config.task.metric,
         )
@@ -117,6 +112,8 @@ class Evaluation:
                 task=self.user_config.task.type,
                 input_column=self.input_column,
                 api_key=EnvSettings.api_key,
+                source_language=source_language,
+                target_language=target_language,
             ),
             data=dataset_path,
             subset=self.subset,
@@ -126,25 +123,6 @@ class Evaluation:
             metric=self.user_config.task.metric,
         )
 
-        # mucs = load_dataset("./dhruva_datasets/mucs/mucs.py", data_dir="./dhruva_datasets/mucs/data")
-        # task_evaluator = DhruvaASREvaluator(task="dhruva_asr", default_metric_name="wer")
-        # results = task_evaluator.compute(
-        #     model_or_pipeline=DhruvaModel(
-        #         url=url,
-        #         task="dhruva_asr",
-        #         input_column="audio",
-        #         input_language_column="language",
-        #         api_key="ae66a0b6-69de-4aaf-8fd1-aa07f8ec961b",
-        #         format = "wav"
-        #     ),
-        #     data="./dhruva_datasets/CommonVoice/CommonVoice.py",
-        #     # data="ai4bharat/MUCS-internal",
-        #     subset="hi",
-        #     split="test",
-        #     input_column="audio",
-        #     label_column="sentence",
-        #     metric="wer",
-        # )
         logger.warning(f"\n\nResults:\n{json.dumps(results, indent=4)}\n\n\n")
         with open(os.path.join(self.user_config.results_folder, self.subset + ".json"), "w") as f:
             json.dump(results, f)
@@ -155,22 +133,20 @@ class EvaluationSuite:
 
     def __init__(self, config_path):
         self.user_config = UserConfiguration.parse_obj(parse_yaml_file(config_path))
-        logger.warning(
-            f"\n\nUser Config:\n{json.dumps(self.user_config.dict(), indent=4)}\n\n"
-        )
+        logger.warning(f"\n\nUser Config:\n{json.dumps(self.user_config.dict(), indent=4)}\n\n")
         self.evaluator = Evaluation(self.user_config)
 
     def loop_langs(
-            self,
-            source_languages,
-            target_languages,
-            dataset_name,
-            dataset_path,
-            split,
-            input_columns,
-            label_columns,
-            subsets
-        ):
+        self,
+        source_languages,
+        target_languages,
+        dataset_name,
+        dataset_path,
+        split,
+        input_columns,
+        label_columns,
+        subsets,
+    ):
         if input_columns is None or subsets is None or label_columns is None:
             input_columns = [None for i in range(len(source_languages))]
             label_columns = [None for i in range(len(source_languages))]
@@ -179,16 +155,7 @@ class EvaluationSuite:
         for slang, tlang, inp_col, label_col, subset in zip(
             source_languages, target_languages, input_columns, label_columns, subsets
         ):
-            self._run(
-                slang,
-                tlang,
-                dataset_name,
-                dataset_path,
-                split,
-                inp_col,
-                label_col,
-                subset
-            )
+            self._run(slang, tlang, dataset_name, dataset_path, split, inp_col, label_col, subset)
 
     def run_datasets(self):
         for dataset in self.user_config.dataset:
@@ -202,7 +169,7 @@ class EvaluationSuite:
                     dataset.split,
                     dataset.input_column,
                     dataset.label_column,
-                    dataset.subset
+                    dataset.subset,
                 )
             else:
                 self._run(
@@ -213,34 +180,21 @@ class EvaluationSuite:
                     dataset.split,
                     dataset.input_column,
                     dataset.label_column,
-                    dataset.subset
+                    dataset.subset,
                 )
 
     def _run(
-            self,
-            source_language,
-            target_language,
-            dataset_name,
-            dataset_path, 
-            split,
-            input_column,
-            label_column,
-            subset
-        ):
+        self, source_language, target_language, dataset_name, dataset_path, split, input_column, label_column, subset
+    ):
         logger.info(
             f"Source Language:{source_language} \
                         \tTarget Language: {target_language}"
         )
         self.evaluator.initialise_dataset_params(
-            source_language,
-            target_language,
-            dataset_name,
-            input_column,
-            label_column,
-            subset
+            source_language, target_language, dataset_name, input_column, label_column, subset
         )
-        self.evaluator.run(dataset_path, dataset_name, split)
-    
+        self.evaluator.run(dataset_path, dataset_name, split, source_language, target_language)
+
     def run(self):
         if isinstance(self.user_config.dataset, list):
             self.run_datasets()
@@ -254,7 +208,7 @@ class EvaluationSuite:
                 self.user_config.dataset.split,
                 self.user_config.dataset.input_column,
                 self.user_config.dataset.label_column,
-                self.user_config.dataset.subset
+                self.user_config.dataset.subset,
             )
 
         else:
@@ -276,4 +230,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     suite = EvaluationSuite(args.file)
     suite.run()
-
