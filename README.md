@@ -31,9 +31,14 @@ export DHRUVA_API_KEY="<token>"
 
 ## Functional Testing
 
-To perform Fucntional testing for a task using the Dhruva Evaluation tool, build a simple YML file as shown below (according to the task). Examples given below:
+To perform Fucntional testing for a task using the Dhruva Evaluation tool, build a simple YML file with the given format (according to the task). Examples given below:
 
-* NOTE : Datasets with column names similar to the examples mentioned below, like 'ai4bharat/MUCS_Internal' for ASR and 'facebook/flores' for NMT, hosted on HuggingFace, will work best with this tool
+NOTE : 
+* Datasets with column names similar to the examples mentioned below, like 'ai4bharat/MUCS_Internal' for ASR and 'facebook/flores' for NMT, hosted on HuggingFace, will work best with this tool
+
+```bash
+cd functional/
+```
 
 ### ASR
 
@@ -146,7 +151,7 @@ model:
 
 dataset:
   - name: "ai4bharat/aksharantar"
-    path: "/home/dhruvauser/evaluation_suite/new_eval/Dhruva-Evaluation-Suite/src/functional/dhruva_datasets/Aksharantar/hin/test"
+    path: "/dhruva_datasets/Aksharantar/hin/test"
     source_language: "en"
     target_language: "hi"
     split: "test"
@@ -164,6 +169,11 @@ python3 dhruva_evaluate.py -f  <FILE NAME>.yml
 
 ## Performance Testing
 
+Performance testing of any endpoint based on a REST connection or SOCKET connection can be perfomed by the following process:
+
+```bash
+cd performance/
+```
 ### REST API Performance Testing
 
 Generate the payload for the task, in the form of a "lua" file, that you intend to test out with one of the following commands:
